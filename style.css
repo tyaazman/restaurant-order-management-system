@@ -1,0 +1,333 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+/* Color Palette Variables */
+:root {
+    /* Customer Variables */
+    --bg-creme: #E1D3A9;
+    --text-coffee: #371E13;
+    --header-maroon: #5E2A25;
+    --card-clay: #C0AA8A;
+    --btn-peach: #A85530;
+    --border-leather: #734F31;
+    --accent-pine: #534B31;
+
+    /* Staff Variables */
+    --bg-cream: #E1D3A9;
+    --text-brown: #371E13;
+    --accent-orange: #A85530;
+    --danger-red: #5E2A25;
+    --white: #FFFFFF;
+}
+
+/* =========================================================
+   CUSTOMER PORTAL STYLES (Frontend)
+========================================================= */
+
+body.customer-portal {
+    background-color: var(--bg-creme);
+    color: var(--text-coffee);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* --- Hero Banner Layout --- */
+.hero-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+}
+
+.hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hero-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    padding: 20px;
+    width: 100%;
+}
+
+.hero-text h1 {
+    color: #4B3621;
+    font-size: 3.5rem;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
+}
+
+.hero-text p {
+    color: white;
+    font-size: 1.5rem;
+    margin-top: 10px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* --- Navigation --- */
+.category-nav {
+    position: sticky;
+    top: 0;
+    background-color: var(--card-clay);
+    padding: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+.category-nav a {
+    text-decoration: none;
+    color: var(--text-coffee);
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 20px;
+    background-color: var(--bg-creme);
+}
+
+.category-nav a.active,
+.category-nav a:hover {
+    background-color: var(--accent-pine);
+    color: var(--bg-creme);
+}
+
+/* --- Menu Grid & Cards --- */
+.menu-container {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-bottom: 100px;
+}
+
+.section-title {
+    border-bottom: 2px solid var(--border-leather);
+    padding-bottom: 10px;
+    margin-top: 40px;
+    color: var(--header-maroon);
+}
+
+.grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.menu-card {
+    background-color: var(--card-clay);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-content {
+    padding: 20px;
+}
+
+.price {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--header-maroon);
+    margin-bottom: 15px;
+}
+
+/* --- Add-Ons & Buttons --- */
+/* Forces Add-On options to new lines & left-aligns */
+.add-on-label {
+    display: block;
+    margin-bottom: 10px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.add-btn {
+    background-color: var(--btn-peach);
+    color: white;
+    border: none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.add-btn:hover {
+    background-color: var(--header-maroon);
+}
+
+/* --- Floating Cart --- */
+.floating-cart {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #8B4513;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.cart-count {
+    background-color: var(--bg-creme);
+    color: var(--header-maroon);
+    padding: 2px 8px;
+    border-radius: 50%;
+    font-weight: bold;
+}
+
+/* --- Checkout Page (Full-Width & Left-Aligned) --- */
+.page-header {
+    background-color: #8B4513;
+    color: white;
+    padding: 30px;
+    text-align: center;
+    border-bottom: 5px solid #5D2E0A;
+}
+
+/* Update this specific block in your style.css */
+.checkout-wrapper {
+    max-width: 800px;
+    /* Keeps the form from getting too wide */
+    margin: 40px auto;
+    /* 'auto' centers the container */
+    padding: 0 20px;
+    /* Adds a little breathing room on mobile screens */
+    text-align: left;
+    /* Keeps the text and inputs left-aligned inside the centered box */
+}
+
+.form-row {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-row input,
+.form-row select,
+.form-row textarea {
+    padding: 12px;
+    margin-top: 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.order-summary {
+    background: #f0e6d2;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 5px solid #8B4513;
+}
+
+/* =========================================================
+   STAFF PORTAL STYLES (Backend/Admin)
+========================================================= */
+
+body.staff-portal {
+    font-family: 'Poppins', Arial, sans-serif;
+    background-color: var(--bg-cream);
+    color: var(--text-brown);
+    margin: 0;
+    padding: 0;
+}
+
+.staff-portal .sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: var(--text-brown);
+    position: fixed;
+    padding-top: 20px;
+}
+
+.staff-portal .sidebar h2 {
+    color: var(--accent-orange);
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.staff-portal .sidebar a {
+    padding: 15px 25px;
+    text-decoration: none;
+    font-size: 16px;
+    color: var(--bg-cream);
+    display: block;
+    transition: 0.3s;
+}
+
+.staff-portal .sidebar a:hover {
+    background-color: var(--accent-orange);
+    color: var(--white);
+}
+
+.staff-portal .main-content {
+    margin-left: 250px;
+    padding: 30px;
+}
+
+/* Card & Container Styles */
+.staff-portal .card {
+    background-color: var(--white);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+.staff-portal .login-container {
+    max-width: 400px;
+    margin: 100px auto;
+}
+
+/* Buttons and Inputs */
+.staff-portal button {
+    background-color: var(--accent-orange);
+    color: var(--white);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+.staff-portal button:hover {
+    opacity: 0.9;
+}
+
+.staff-portal input, .staff-portal select {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Tables */
+.staff-portal table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.staff-portal th, .staff-portal td {
+    border-bottom: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.staff-portal th {
+    background-color: var(--text-brown);
+    color: var(--bg-cream);
+}

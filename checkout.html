@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Order - Sup Tulang ZZ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="customer-portal">
+    <div class="page-header">
+        <h1>Order</h1>
+    </div>
+
+    <main class="checkout-wrapper">
+
+        <div class="order-summary">
+            <h3>Your Order:</h3>
+            <div id="checkout-list"></div>
+            <hr>
+            <h3 id="total-price"></h3>
+        </div>
+
+        <form id="order-form">
+            <div class="form-row">
+                <label>Order Type:</label>
+                <select id="order-type" onchange="toggleFields()">
+                    <option value="online">Online Order</option>
+                    <option value="walkin-takeaway">Walk-in Takeaway</option>
+                    <option value="walkin-dinein">Walk-in Dine-in</option>
+                </select>
+            </div>
+
+            <div id="dynamic-fields"></div>
+
+            <div class="form-row">
+                <label>Payment Method:</label>
+                <select>
+                    <option>Cash</option>
+                    <option>Online Banking</option>
+                    <option>Credit/Debit Card</option>
+                </select>
+            </div>
+
+            <button type="submit" class="add-btn">Confirm Order</button>
+        </form>
+    </main>
+
+    <script>
+        const cart = JSON.parse(localStorage.getItem('myCart')) || [];
+        const listDiv = document.getElementById('checkout-list');
+        const totalDiv = document.getElementById('total-price');
+
+        let total = 0;
+        cart.forEach(item => {
+            listDiv.innerHTML += `<p>${item.name} - ${item.price}</p>`;
+            total += parseFloat(item.price.replace('RM ', ''));
+        });
+        totalDiv.innerText = `Total: RM ${total.toFixed(2)}`;
+
+        function toggleFields() {
+            const type = document.getElementById('order-type').value;
+            // Start with Full Name for all types
+            let html = `<div class="form-row"><label>Full Name:</label><input type="text" required></div>`;
+
+            if (type === 'online') {
+                html += `<div class="form-row"><label>Phone Number:</label><input type="text" required></div>
+                         <div class="form-row"><label>Email:</label><input type="email" required></div>
+                         <div class="form-row"><label>Shipping Address:</label><textarea required></textarea></div>`;
+            } else if (type === 'walkin-takeaway') {
+                html += `<div class="form-row"><label>Email:</label><input type="email" required></div>
+                         <div class="form-row"><label>Phone Number:</label><input type="text" required></div>`;
+            } else if (type === 'walkin-dinein') {
+                html += `<div class="form-row"><label>Table Number:</label><input type="number" required></div>
+                         <div class="form-row"><label>Email:</label><input type="email" required></div>`;
+            }
+            document.getElementById('dynamic-fields').innerHTML = html;
+        }
+
+        // Initialize fields on load
+        toggleFields();
+
+        document.getElementById('order-form').onsubmit = (e) => {
+            e.preventDefault();
+            alert("Order Confirmed! A confirmation email has been sent.");
+            localStorage.removeItem('myCart');
+            window.location.href = 'index.html';
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sup Tulang ZZ - Ala Carte</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="customer-portal">
+
+    <!-- HERO SECTION -->
+    <header class="hero-section">
+        <img src="ala-carte.jpg" alt="Menu Image" style="width: 100%; height: 300px; object-fit: cover;">
+    </header>
+
+    <!-- FULL CATEGORY NAV -->
+    <nav class="category-nav">
+        <a href="index.html">Sup ZZ</a>
+        <a href="mee-rebus.html">Mee Rebus ZZ</a>
+        <a href="sarapan.html">Sarapan</a>
+        <a href="roti-canai.html">Roti Canai</a>
+        <a href="set-tengah-hari.html">Set Tengah Hari</a>
+        <a href="menu-ikan.html">Menu Ikan</a>
+        <!-- The active class is now here! -->
+        <a href="ala-carte.html" class="active">Ala Carte Menu</a>
+        <a href="western.html">Western Food</a>
+        <a href="goreng-goreng.html">Goreng-Goreng</a>
+        <a href="drinks.html">Drinks</a>
+    </nav>
+
+    <!-- MAIN MENU GRID -->
+    <main class="menu-container">
+
+        <!-- SAYUR SECTION -->
+        <h2 class="section-title">Sayur</h2>
+        <div class="grid-layout">
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Kailan</h3>
+                    <p class="price">RM 7.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan (Pilih Satu):</p>
+                        <label class="add-on-label"><input type="radio" name="kailan_choice"> Biasa</label>
+                        <label class="add-on-label"><input type="radio" name="kailan_choice"> Ikan Masin</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Kangkung</h3>
+                    <p class="price">RM 7.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan (Pilih Satu):</p>
+                        <label class="add-on-label"><input type="radio" name="kangkung_choice"> Biasa</label>
+                        <label class="add-on-label"><input type="radio" name="kangkung_choice"> Belacan</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Taugeh</h3>
+                    <p class="price">RM 7.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan (Pilih Satu):</p>
+                        <label class="add-on-label"><input type="radio" name="taugeh_choice"> Biasa</label>
+                        <label class="add-on-label"><input type="radio" name="taugeh_choice"> Ikan Masin</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Sawi</h3>
+                    <p class="price">RM 7.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan (Pilih Satu):</p>
+                        <label class="add-on-label"><input type="radio" name="sawi_choice"> Biasa</label>
+                        <label class="add-on-label"><input type="radio" name="sawi_choice"> Ikan Masin</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Cendawan Goreng Biasa</h3>
+                    <p class="price">RM 7.00</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ANEKA LAUK THAI SECTION -->
+        <h2 class="section-title" style="margin-top: 50px;">Aneka Lauk Thai</h2>
+        <div class="grid-layout">
+
+            <!-- BLACK PEPPER -->
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Ayam Black Pepper</h3>
+                    <p class="price">RM 7.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Daging Black Pepper</h3>
+                    <p class="price">RM 8.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Sotong Black Pepper</h3>
+                    <p class="price">RM 9.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <!-- SAMBAL -->
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Ayam Sambal</h3>
+                    <p class="price">RM 7.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Daging Sambal</h3>
+                    <p class="price">RM 8.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Sotong Sambal</h3>
+                    <p class="price">RM 9.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <!-- MERAH -->
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Ayam Merah</h3>
+                    <p class="price">RM 7.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Daging Merah</h3>
+                    <p class="price">RM 8.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Sotong Merah</h3>
+                    <p class="price">RM 9.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <!-- PAPRIK -->
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Ayam Paprik</h3>
+                    <p class="price">RM 7.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Daging Paprik</h3>
+                    <p class="price">RM 8.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Sotong Paprik</h3>
+                    <p class="price">RM 9.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <!-- PHA KHRA PHAO -->
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Ayam Pha Khra Phao</h3>
+                    <p class="price">RM 8.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Daging Pha Khra Phao</h3>
+                    <p class="price">RM 9.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <!-- KUNYIT -->
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Ayam Kunyit</h3>
+                    <p class="price">RM 7.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Daging Kunyit</h3>
+                    <p class="price">RM 9.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Sotong Kunyit</h3>
+                    <p class="price">RM 9.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Udang Kunyit</h3>
+                    <p class="price">RM 9.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Putih (+RM 2.00)</label>
+                        <label class="add-on-label"><input type="checkbox"> Nasi Goreng (+RM 3.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- GORENG TEPUNG SECTION -->
+        <h2 class="section-title" style="margin-top: 50px;">Goreng Tepung</h2>
+        <div class="grid-layout">
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Sotong Goreng Tepung</h3>
+                    <p class="price">RM 10.50</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Udang Goreng Tepung</h3>
+                    <p class="price">RM 10.50</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Cendawan Goreng Tepung</h3>
+                    <p class="price">RM 7.00</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Inokki Goreng Tepung</h3>
+                    <p class="price">RM 7.00</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SUP ALA THAI SECTION -->
+        <h2 class="section-title" style="margin-top: 50px;">Sup Ala Thai</h2>
+        <div class="grid-layout">
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Sup Ayam Ala Thai</h3>
+                    <p class="price">RM 8.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Mee / Mee Hoon / Kuey Teow (+RM
+                            2.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Sup Daging Ala Thai</h3>
+                    <p class="price">RM 9.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Mee / Mee Hoon / Kuey Teow (+RM
+                            2.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TOMYAM SECTION -->
+        <h2 class="section-title" style="margin-top: 50px;">Tomyam</h2>
+        <div class="grid-layout">
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Tom Yam Ayam</h3>
+                    <p class="price">RM 8.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan Kuah:</p>
+                        <label class="add-on-label"><input type="radio" name="ty_ayam_kuah"> Seekaw (Putih)</label>
+                        <label class="add-on-label"><input type="radio" name="ty_ayam_kuah"> Sideng (Merah)</label>
+                        <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-leather);">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Mee / Mee Hoon / Kuey Teow (+RM
+                            2.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Tom Yam Daging</h3>
+                    <p class="price">RM 9.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan Kuah:</p>
+                        <label class="add-on-label"><input type="radio" name="ty_daging_kuah"> Seekaw (Putih)</label>
+                        <label class="add-on-label"><input type="radio" name="ty_daging_kuah"> Sideng (Merah)</label>
+                        <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-leather);">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Mee / Mee Hoon / Kuey Teow (+RM
+                            2.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Tom Yam Ayam + Daging</h3>
+                    <p class="price">RM 12.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan Kuah:</p>
+                        <label class="add-on-label"><input type="radio" name="ty_mix_kuah"> Seekaw (Putih)</label>
+                        <label class="add-on-label"><input type="radio" name="ty_mix_kuah"> Sideng (Merah)</label>
+                        <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-leather);">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Mee / Mee Hoon / Kuey Teow (+RM
+                            2.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Tom Yam Seafood</h3>
+                    <p class="price">RM 13.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan Kuah:</p>
+                        <label class="add-on-label"><input type="radio" name="ty_seafood_kuah"> Seekaw (Putih)</label>
+                        <label class="add-on-label"><input type="radio" name="ty_seafood_kuah"> Sideng (Merah)</label>
+                        <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-leather);">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Mee / Mee Hoon / Kuey Teow (+RM
+                            2.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Tom Yam Campur</h3>
+                    <p class="price">RM 13.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan Kuah:</p>
+                        <label class="add-on-label"><input type="radio" name="ty_campur_kuah"> Seekaw (Putih)</label>
+                        <label class="add-on-label"><input type="radio" name="ty_campur_kuah"> Sideng (Merah)</label>
+                        <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-leather);">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Mee / Mee Hoon / Kuey Teow (+RM
+                            2.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Tom Yam Sayur</h3>
+                    <p class="price">RM 8.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan Kuah:</p>
+                        <label class="add-on-label"><input type="radio" name="ty_sayur_kuah"> Seekaw (Putih)</label>
+                        <label class="add-on-label"><input type="radio" name="ty_sayur_kuah"> Sideng (Merah)</label>
+                        <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-leather);">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Mee / Mee Hoon / Kuey Teow (+RM
+                            2.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Tom Yam Cendawan</h3>
+                    <p class="price">RM 8.00</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan Kuah:</p>
+                        <label class="add-on-label"><input type="radio" name="ty_cendawan_kuah"> Seekaw (Putih)</label>
+                        <label class="add-on-label"><input type="radio" name="ty_cendawan_kuah"> Sideng (Merah)</label>
+                        <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-leather);">
+                        <p class="add-on-title">Add On:</p>
+                        <label class="add-on-label"><input type="checkbox"> Mee / Mee Hoon / Kuey Teow (+RM
+                            2.00)</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- MEE KUAH SECTION -->
+        <h2 class="section-title" style="margin-top: 50px;">Mee Kuah</h2>
+        <div class="grid-layout">
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Mee Kuah Bandung</h3>
+                    <p class="price">RM 10.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan Mee:</p>
+                        <label class="add-on-label"><input type="radio" name="mk_bandung_choice"> Mee</label>
+                        <label class="add-on-label"><input type="radio" name="mk_bandung_choice"> Mee Hoon</label>
+                        <label class="add-on-label"><input type="radio" name="mk_bandung_choice"> Kuey Teow</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Mee Kuah Hong Kong</h3>
+                    <p class="price">RM 10.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan Mee:</p>
+                        <label class="add-on-label"><input type="radio" name="mk_hk_choice"> Mee</label>
+                        <label class="add-on-label"><input type="radio" name="mk_hk_choice"> Mee Hoon</label>
+                        <label class="add-on-label"><input type="radio" name="mk_hk_choice"> Kuey Teow</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Mee Kuah Hailam</h3>
+                    <p class="price">RM 10.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan Mee:</p>
+                        <label class="add-on-label"><input type="radio" name="mk_hailam_choice"> Mee</label>
+                        <label class="add-on-label"><input type="radio" name="mk_hailam_choice"> Mee Hoon</label>
+                        <label class="add-on-label"><input type="radio" name="mk_hailam_choice"> Kuey Teow</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Mee Kuah Kung Fu</h3>
+                    <p class="price">RM 10.50</p>
+                    <div class="add-on-section">
+                        <p class="add-on-title">Pilihan Mee:</p>
+                        <label class="add-on-label"><input type="radio" name="mk_kungfu_choice"> Mee</label>
+                        <label class="add-on-label"><input type="radio" name="mk_kungfu_choice"> Mee Hoon</label>
+                        <label class="add-on-label"><input type="radio" name="mk_kungfu_choice"> Kuey Teow</label>
+                    </div>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- FLOATING CART BUTTON -->
+    <div class="floating-cart">
+        <span class="cart-icon">🛒</span>
+        <span id="cart-count" class="cart-count">0</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
