@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - Sup Tulang ZZ</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Maroon Header Styling */
+        .cart-header {
+            background-color: #8B4513;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 5px solid #5D2E0A;
+        }
+
+        .cart-item {
+            border-bottom: 1px solid #ddd;
+            padding: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.1rem;
+        }
+
+        .total-section {
+            margin-top: 20px;
+            text-align: right;
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: #8B4513;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="cart-header">
+        <h1>Cart</h1>
+    </div>
+
+    <main class="menu-container" style="max-width: 600px; margin: 40px auto;">
+
+        <div id="cart-list"></div>
+
+        <div id="total-price" class="total-section"></div>
+
+        <div style="display: flex; gap: 10px; margin-top: 30px;">
+            <a href="index.html" class="add-btn" style="flex:1; text-align:center; text-decoration:none;">Back to
+                Menu</a>
+            <button onclick="window.location.href='checkout.html'" class="add-btn"
+                style="flex:1; background-color: #28a745;">Proceed to Checkout</button>
+        </div>
+    </main>
+
+    <script>
+        // 1. Load the cart data from localStorage
+        const cart = JSON.parse(localStorage.getItem('myCart')) || [];
+        const listDiv = document.getElementById('cart-list');
+        const totalDiv = document.getElementById('total-price');
+
+        // 2. Render items
+        if (cart.length === 0) {
+            listDiv.innerHTML = "<p style='text-align:center;'>Your cart is currently empty.</p>";
+        } else {
+            let total = 0;
+            cart.forEach(item => {
+                // Extract numeric value from string "RM 9.50" -> 9.50
+                const priceValue = parseFloat(item.price.replace('RM ', ''));
+                total += priceValue;
+
+                listDiv.innerHTML += `
+                    <div class="cart-item">
+                        <span>${item.name}</span>
+                        <span>${item.price}</span>
+                    </div>`;
+            });
+            // 3. Display Total
+            totalDiv.innerHTML = `Total: RM ${total.toFixed(2)}`;
+        }
+    </script>
+</body>
+
+</html>

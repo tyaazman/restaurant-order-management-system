@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sup Tulang ZZ - Goreng-Goreng</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header class="hero-section">
+        <img src="goreng-goreng.jpg" alt="Menu Image" style="width: 100%; height: 300px; object-fit: cover;">
+    </header>
+
+    <nav class="category-nav">
+        <a href="index.html">Sup ZZ</a>
+        <a href="mee-rebus.html">Mee Rebus ZZ</a>
+        <a href="sarapan.html">Sarapan</a>
+        <a href="roti-canai.html">Roti Canai</a>
+        <a href="set-tengah-hari.html">Set Tengah Hari</a>
+        <a href="menu-ikan.html">Menu Ikan</a>
+        <a href="ala-carte.html">Ala Carte Menu</a>
+        <a href="western.html">Western Food</a>
+        <a href="goreng-goreng.html" class="active">Goreng-Goreng</a>
+        <a href="drinks.html">Drinks</a>
+    </nav>
+
+    <main class="menu-container">
+
+        <h2 class="section-title">Nasi Goreng</h2>
+        <div class="grid-layout">
+            <!-- Helper function to generate cards -->
+            <script>
+                const nasiItems = [
+                    { name: "Nasi Goreng Biasa", price: "7.50" },
+                    { name: "Nasi Goreng Kampung", price: "8.00" },
+                    { name: "Nasi Goreng Cina", price: "7.50" },
+                    { name: "Nasi Goreng Ikan Masin", price: "8.50" },
+                    { name: "Nasi Goreng Cili Padi", price: "8.50" },
+                    { name: "Nasi Goreng Pattaya", price: "8.50" },
+                    { name: "Nasi Goreng Tom Yam", price: "9.00" },
+                    { name: "Nasi Goreng Belacan", price: "12.00" }
+                ];
+
+                nasiItems.forEach(item => {
+                    document.write(`
+                        <div class="menu-card">
+                            <div class="card-content">
+                                <h3>${item.name}</h3>
+                                <p class="price">RM ${item.price}</p>
+                                <div class="add-on-section">
+                                    <p class="add-on-title">Pilihan Protein:</p>
+                                    <label class="add-on-label"><input type="radio" name="${item.name.replace(/\s+/g, '_')}_protein"> Daging (+RM 1.00)</label>
+                                    <label class="add-on-label"><input type="radio" name="${item.name.replace(/\s+/g, '_')}_protein"> Udang (+RM 3.00)</label>
+                                    <label class="add-on-label"><input type="radio" name="${item.name.replace(/\s+/g, '_')}_protein"> Sotong (+RM 3.00)</label>
+                                </div>
+                                <button class="add-btn">+ Add to Cart</button>
+                            </div>
+                        </div>
+                    `);
+                });
+            </script>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 50px;">Mee Goreng</h2>
+        <div class="grid-layout">
+            <script>
+                const meeItems = [
+                    { name: "Mee Goreng", price: "7.50" },
+                    { name: "Mee Hoon Goreng Singapore", price: "7.50" },
+                    { name: "Char Kuey Teow", price: "8.00" }
+                ];
+
+                meeItems.forEach(item => {
+                    document.write(`
+                        <div class="menu-card">
+                            <div class="card-content">
+                                <h3>${item.name}</h3>
+                                <p class="price">RM ${item.price}</p>
+                                <div class="add-on-section">
+                                    <p class="add-on-title">Pilihan Protein:</p>
+                                    <label class="add-on-label"><input type="radio" name="${item.name.replace(/\s+/g, '_')}_protein"> Daging (+RM 1.00)</label>
+                                    <label class="add-on-label"><input type="radio" name="${item.name.replace(/\s+/g, '_')}_protein"> Udang (+RM 3.00)</label>
+                                    <label class="add-on-label"><input type="radio" name="${item.name.replace(/\s+/g, '_')}_protein"> Sotong (+RM 3.00)</label>
+                                </div>
+                                <button class="add-btn">+ Add to Cart</button>
+                            </div>
+                        </div>
+                    `);
+                });
+            </script>
+        </div>
+
+    </main>
+
+    <div class="floating-cart">
+        <span class="cart-icon">🛒</span>
+        <span id="cart-count" class="cart-count">0</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sup Tulang ZZ - Roti Canai</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- HERO SECTION (No text, just the background image) -->
+    <header class="hero-section">
+        <img src="roti-canai.jpg" alt="Menu Image" style="width: 100%; height: 300px; object-fit: cover;">
+    </header>
+
+    <!-- FULL CATEGORY NAV -->
+    <nav class="category-nav">
+        <a href="index.html">Sup ZZ</a>
+        <a href="mee-rebus.html">Mee Rebus ZZ</a>
+        <a href="sarapan.html">Sarapan</a>
+        <!-- The active class is now here for the green pill shape! -->
+        <a href="roti-canai.html" class="active">Roti Canai</a>
+        <a href="set-tengah-hari.html">Set Tengah Hari</a>
+        <a href="menu-ikan.html">Menu Ikan</a>
+        <a href="ala-carte.html">Ala Carte Menu</a>
+        <a href="western.html">Western Food</a>
+        <a href="goreng-goreng.html">Goreng-Goreng</a>
+        <a href="drinks.html">Drinks</a>
+    </nav>
+
+    <!-- MAIN MENU GRID -->
+    <main class="menu-container">
+
+        <!-- ROTI CANAI SECTION -->
+        <h2 class="section-title">Roti Canai</h2>
+
+        <!-- Availability Note added here based on your menu image -->
+        <p style="text-align: center; color: var(--header-maroon); font-weight: bold; margin-bottom: 30px;">
+            Available: 7:00 am - 11:00 am / 6:00 pm - 11:00 pm
+        </p>
+
+        <div class="grid-layout">
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Roti Kosong</h3>
+                    <p class="price">RM 1.50</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Roti Kosong Bawang</h3>
+                    <p class="price">RM 2.00</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Roti Tampal</h3>
+                    <p class="price">RM 2.80</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Roti Telur</h3>
+                    <p class="price">RM 2.80</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Roti Telur Bawang</h3>
+                    <p class="price">RM 3.50</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Roti Telur Double Jantan</h3>
+                    <p class="price">RM 5.50</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Roti Pisang</h3>
+                    <p class="price">RM 4.50</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Roti Sardin</h3>
+                    <p class="price">RM 6.00</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Roti Bom</h3>
+                    <p class="price">RM 2.50</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Roti Planta</h3>
+                    <p class="price">RM 3.00</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="card-content">
+                    <h3>Roti Sarang Burung Daging</h3>
+                    <p class="price">RM 8.00</p>
+                    <button class="add-btn">+ Add to Cart</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FLOATING CART BUTTON -->
+    <div class="floating-cart">
+        <span class="cart-icon">🛒</span>
+        <span id="cart-count" class="cart-count">0</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,216 @@
+/* Color Palette Variables */
+:root {
+    --bg-creme: #E1D3A9;
+    --text-coffee: #371E13;
+    --header-maroon: #5E2A25;
+    --card-clay: #C0AA8A;
+    --btn-peach: #A85530;
+    --border-leather: #734F31;
+    --accent-pine: #534B31;
+}
+
+body {
+    background-color: var(--bg-creme);
+    color: var(--text-coffee);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* --- Hero Banner Layout --- */
+.hero-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+}
+
+.hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hero-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    padding: 20px;
+    width: 100%;
+}
+
+.hero-text h1 {
+    color: #4B3621;
+    font-size: 3.5rem;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
+}
+
+.hero-text p {
+    color: white;
+    font-size: 1.5rem;
+    margin-top: 10px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* --- Navigation --- */
+.category-nav {
+    position: sticky;
+    top: 0;
+    background-color: var(--card-clay);
+    padding: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+.category-nav a {
+    text-decoration: none;
+    color: var(--text-coffee);
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 20px;
+    background-color: var(--bg-creme);
+}
+
+.category-nav a.active,
+.category-nav a:hover {
+    background-color: var(--accent-pine);
+    color: var(--bg-creme);
+}
+
+/* --- Menu Grid & Cards --- */
+.menu-container {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-bottom: 100px;
+}
+
+.section-title {
+    border-bottom: 2px solid var(--border-leather);
+    padding-bottom: 10px;
+    margin-top: 40px;
+    color: var(--header-maroon);
+}
+
+.grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.menu-card {
+    background-color: var(--card-clay);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-content {
+    padding: 20px;
+}
+
+.price {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--header-maroon);
+    margin-bottom: 15px;
+}
+
+/* --- Add-Ons & Buttons --- */
+/* Forces Add-On options to new lines & left-aligns */
+.add-on-label {
+    display: block;
+    margin-bottom: 10px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.add-btn {
+    background-color: var(--btn-peach);
+    color: white;
+    border: none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.add-btn:hover {
+    background-color: var(--header-maroon);
+}
+
+/* --- Floating Cart --- */
+.floating-cart {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #8B4513;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.cart-count {
+    background-color: var(--bg-creme);
+    color: var(--header-maroon);
+    padding: 2px 8px;
+    border-radius: 50%;
+    font-weight: bold;
+}
+
+/* --- Checkout Page (Full-Width & Left-Aligned) --- */
+.page-header {
+    background-color: #8B4513;
+    color: white;
+    padding: 30px;
+    text-align: center;
+    border-bottom: 5px solid #5D2E0A;
+}
+
+/* Update this specific block in your style.css */
+.checkout-wrapper {
+    max-width: 800px;
+    /* Keeps the form from getting too wide */
+    margin: 40px auto;
+    /* 'auto' centers the container */
+    padding: 0 20px;
+    /* Adds a little breathing room on mobile screens */
+    text-align: left;
+    /* Keeps the text and inputs left-aligned inside the centered box */
+}
+
+.form-row {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-row input,
+.form-row select,
+.form-row textarea {
+    padding: 12px;
+    margin-top: 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.order-summary {
+    background: #f0e6d2;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 5px solid #8B4513;
+}
