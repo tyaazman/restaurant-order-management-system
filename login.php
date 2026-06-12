@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Staff Login</title>
-    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body style="background-color: var(--text-brown);">
+<body class="staff-portal" style="background-color: var(--text-brown);">
 
     <div class="card login-container">
         <h2 style="text-align: center; color: var(--accent-orange);">Staff Portal Login</h2>

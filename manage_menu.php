@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Menu — Restaurant</title>
-    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         /* ── Modal ── */
         .modal-overlay {
@@ -95,7 +95,7 @@
         td.price-cell { font-weight:600; color:var(--text-brown); }
     </style>
 </head>
-<body>
+<body class="staff-portal">
 
     <div class="sidebar">
         <h2>Restaurant</h2>

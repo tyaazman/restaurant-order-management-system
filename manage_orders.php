@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Orders — Restaurant</title>
-    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         /* ── Page header ── */
         .page-header {
@@ -173,7 +173,7 @@
         .no-orders { text-align: center; padding: 50px; color: #aaa; font-size: 1rem; }
     </style>
 </head>
-<body>
+<body class="staff-portal">
 
     <div class="sidebar">
         <h2>Restaurant</h2>
