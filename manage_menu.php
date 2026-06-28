@@ -331,6 +331,7 @@ foreach ($CATEGORIES as $cat):
         $catJS   = json_encode($item['category']);
         $price   = number_format((float)$item['price'], 2);
         $id      = (int)$item['item_id'];
+        $optionsEsc = htmlspecialchars(json_encode($optionsByItem[$id] ?? []));
         echo "<tr id=\"row_{$id}\" class=\"item-row\" data-id=\"{$id}\" data-category=\"{$catEsc}\" data-name=\"".strtolower($item['item_name'])."\">";
         echo "<td style=\"color:#aaa;font-size:0.8rem;\">#{$id}</td>";
         echo "<td>";
@@ -352,7 +353,7 @@ foreach ($CATEGORIES as $cat):
         echo "<td style=\"font-size:0.8rem;color:#888;\">{$catEsc}</td>";
         echo "<td class=\"price-cell\" id=\"price_{$id}\">RM {$price}</td>";
         echo "<td>";
-        echo "<button class=\"btn-edit\" onclick=\"openEditModal({$id},{$nameJS},{$item['price']},{$catJS})\">✏️ Edit</button>";
+        echo "<button class=\"btn-edit\" onclick='openEditModal({$id},{$nameJS},{$item['price']},{$catJS},{$optionsEsc})'>✏️ Edit</button>";
         echo "<button class=\"btn-delete\" onclick=\"deleteItem({$id},{$nameJS})\">🗑</button>";
         echo "</td>";
         echo "</tr>";
@@ -392,6 +393,17 @@ endforeach;
                 <option value="<?= htmlspecialchars($cat['id']) ?>"><?= htmlspecialchars($cat['section'].' › '.$cat['label']) ?></option>
                 <?php endforeach; ?>
             </select>
+
+            <!-- Dynamic Edit Options Section -->
+            <div style="margin-top: 15px; border-top: 1px dashed #e0d5c5; padding-top: 15px;">
+                <h4 style="margin: 0 0 10px; color: var(--accent-orange); font-size: 0.9rem;">⚙️ Customize Options / Add-Ons (Optional)</h4>
+                <div id="editOptionsContainer" style="max-height: 160px; overflow-y: auto; padding-right: 5px;">
+                    <!-- Option rows will be loaded here dynamically -->
+                </div>
+                <button type="button" class="btn-action" style="background:#5E2A25; color:#fff; font-size:0.75rem; padding:6px 14px; margin-top: 5px; border-radius:6px;" onclick="addEditOptionRow()">
+                    ➕ Add Option Row
+                </button>
+            </div>
 
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
@@ -589,7 +601,7 @@ endforeach;
                 '<td style="font-size:0.8rem;color:#888;">'+escHtml(category)+'</td>' +
                 '<td class="price-cell" id="price_'+id+'">RM '+priceF+'</td>' +
                 '<td>' +
-                  '<button class="btn-edit" onclick="openEditModal('+id+','+nameJS+','+price+','+catJS+')">✏️ Edit</button>' +
+                  '<button class="btn-edit" onclick=\'openEditModal('+id+','+nameJS+','+price+','+catJS+','+JSON.stringify(options)+')\'>✏️ Edit</button>' +
                   '<button class="btn-delete" onclick="deleteItem('+id+','+nameJS+')">🗑</button>' +
                 '</td>';
 
@@ -617,14 +629,38 @@ endforeach;
             document.getElementById('itemCount').innerText = '('+total+' items)';
         }
 
+        // ── EDIT OPTION ROW ──
+        function addEditOptionRow(group = '', name = '', price = '0.00') {
+            var container = document.getElementById('editOptionsContainer');
+            var div = document.createElement('div');
+            div.className = 'edit-option-row';
+            div.style.cssText = 'display: flex; gap: 10px; align-items: center; margin-bottom: 8px;';
+            div.innerHTML = 
+                '<input type="text" class="edit-opt-group" placeholder="Group (e.g. Add Ons)" value="' + escHtml(group) + '" style="flex: 1; margin: 0; padding: 6px 10px; font-size: 0.82rem;">' +
+                '<input type="text" class="edit-opt-name" placeholder="Name (e.g. Extra Cheese)" value="' + escHtml(name) + '" style="flex: 1.5; margin: 0; padding: 6px 10px; font-size: 0.82rem;">' +
+                '<input type="number" class="edit-opt-price" placeholder="Price (e.g. 1.50)" step="0.05" min="0.00" value="' + parseFloat(price).toFixed(2) + '" style="width: 100px; margin: 0; padding: 6px 10px; font-size: 0.82rem;">' +
+                '<button type="button" style="background:#5E2A25; color:#fff; border:none; padding: 8px 12px; border-radius: 4px; cursor:pointer;" onclick="this.parentElement.remove()">🗑</button>';
+            container.appendChild(div);
+        }
+
         // ── EDIT MODAL ──
-        function openEditModal(id, name, price, category) {
+        function openEditModal(id, name, price, category, options) {
             document.getElementById('modal_edit_id').value    = id;
             document.getElementById('modal_food_name').value  = name;
             document.getElementById('modal_price').value      = parseFloat(price).toFixed(2);
             document.getElementById('modal_category').value   = category;
             document.getElementById('modalItemId').innerText  = '(ID: '+id+')';
             document.getElementById('editError').style.display = 'none';
+
+            // Populate options
+            var container = document.getElementById('editOptionsContainer');
+            container.innerHTML = '';
+            if (options && options.length > 0) {
+                options.forEach(function(opt) {
+                    addEditOptionRow(opt.option_group, opt.option_name, opt.additional_price);
+                });
+            }
+
             document.getElementById('editModal').classList.add('active');
             document.getElementById('modal_food_name').focus();
         }
@@ -650,26 +686,64 @@ endforeach;
             if (!name)          { errors.push('Food name is required.'); }
             if (!price||price<=0){ errors.push('Enter a valid price.'); }
             if (!category)       { errors.push('Select a category.'); }
+
+            // Collect edit options
+            var options = [];
+            var optRows = document.querySelectorAll('.edit-option-row');
+            optRows.forEach(function(row) {
+                var g = row.querySelector('.edit-opt-group').value.trim();
+                var n = row.querySelector('.edit-opt-name').value.trim();
+                var p = parseFloat(row.querySelector('.edit-opt-price').value) || 0;
+                if (g || n) {
+                    if (!g || !n) {
+                        errors.push('Option group and name are both required for each row.');
+                    } else {
+                        options.push({ group: g, name: n, price: p });
+                    }
+                }
+            });
+
             if (errors.length)  { errEl.innerText = '⚠ '+errors[0]; errEl.style.display='block'; return; }
 
             var btn = document.getElementById('saveBtn');
             btn.disabled = true; btn.innerText = 'Saving…';
 
-            postAjax('edit', {id:id, name:name, price:price.toFixed(2), category:category}, function(res){
+            postAjax('edit', {
+                id: id,
+                name: name,
+                price: price.toFixed(2),
+                category: category,
+                options_json: JSON.stringify(options)
+            }, function(res){
                 // Update row in table
                 var row = document.getElementById('row_'+id);
                 if (row) {
                     var nameJS = JSON.stringify(res.name);
                     var catJS  = JSON.stringify(res.category);
                     var priceF = parseFloat(res.price).toFixed(2);
-                    row.cells[1].innerText = res.name;
+
+                    var optionsHtml = '';
+                    if (res.options && res.options.length > 0) {
+                        optionsHtml = '<div style="margin-top: 5px; display: flex; flex-wrap: wrap; gap: 6px;">';
+                        res.options.forEach(function(opt) {
+                            var priceStr = opt.additional_price > 0 ? " (+RM " + parseFloat(opt.additional_price).toFixed(2) + ")" : "";
+                            optionsHtml += '<span style="font-size: 0.72rem; background: #fdf5e6; color: #b85c38; border: 1px solid #ebd5c8; border-radius: 4px; padding: 1px 6px; font-weight: 500;">' +
+                                escHtml(opt.option_group) + ': ' + escHtml(opt.option_name) + priceStr +
+                                '</span>';
+                        });
+                        optionsHtml += '</div>';
+                    }
+
+                    row.cells[1].innerHTML = '<strong>' + escHtml(res.name) + '</strong>' + optionsHtml;
                     row.cells[2].innerText = res.category;
                     row.cells[3].innerText = 'RM '+priceF;
                     row.cells[3].id        = 'price_'+id;
                     row.dataset.name       = res.name.toLowerCase();
                     row.dataset.category   = res.category;
+
+                    var optsJS = JSON.stringify(res.options);
                     row.cells[4].innerHTML =
-                        '<button class="btn-edit" onclick="openEditModal('+id+','+nameJS+','+res.price+','+catJS+')">✏️ Edit</button>' +
+                        '<button class="btn-edit" onclick=\'openEditModal('+id+','+nameJS+','+res.price+','+catJS+','+optsJS+')\'>✏️ Edit</button>' +
                         '<button class="btn-delete" onclick="deleteItem('+id+','+nameJS+')">🗑</button>';
                 }
                 closeEditModal();
