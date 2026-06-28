@@ -43,5 +43,5 @@ Here is how the Staff Panel interacts with the tables you've already created:
 - **`manage_orders.php`**: Order management system reading from `orders` and `order_items`.
 - **`manage_menu.php`**: Menu CRUD system reading/writing to `menu_items`.
 - **`config/db.php`**: Shared PDO database connection logic.
-- **`database/seed_menu.sql`**: We populated all 163 menu items into `menu_items` and added 7 sample orders to help test the system before production.
+- **`database/seed_menu.sql`**: Contains sample orders to help test the system before production. **For the menu data, we will ignore this file and strictly use whatever Member 1 has already populated in the database.**
 - **CSS & JS**: `css/admin.css` and `js/admin_validation.js`.

@@ -42,14 +42,9 @@ Here is the exact schema my Staff Panel is reading from/writing to. Please ensur
 - `subtotal` (DECIMAL 10,2)
 - **`status` (VARCHAR, default 'Pending')** 👈 *Note: I added this column so kitchen staff can mark individual foods as "Cooking" or "Ready"!*
 
-## 3. Seed Data (Important!)
-I have written an SQL file that automatically creates all **163 menu items** (Sup Gearbox, Roti Canai, Tomyam, etc.) and adds **7 sample orders** so we can test the system right away without having to type everything manually.
+## 3. Data & Testing
+Since **Member 1 has already handled the menu data**, please follow Member 1's data for the menu items. You do not need to use my seed data for the menu. 
 
-**Your Action Item:**
-1. Open phpMyAdmin.
-2. Select `restaurant_order_db`.
-3. Go to the "Import" tab.
-4. Upload the file located at: `database/seed_menu.sql` (I just pushed this to GitHub).
-5. Click Import.
+My Staff Panel will simply read whatever menu items Member 1 has already stored in the `menu_items` table. 
 
-Once you do that, my Staff Dashboard will instantly light up with real data, and Member 1 can start pulling real menu items for the customer side!
+*(Note: I did include a file `database/seed_menu.sql` in my push which has 7 dummy orders in it. If you need some fake orders to test if the dashboard is working, you can use that, but ignore the menu items part of it!)*
