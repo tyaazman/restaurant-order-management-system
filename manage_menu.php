@@ -24,7 +24,26 @@ if (isset($_GET['ajax'])) {
         $stmt->execute([$name, $price, $category]);
         $id = (int)$pdo->lastInsertId();
 
-        echo json_encode(['success'=>true, 'id'=>$id, 'name'=>$name, 'price'=>$price, 'category'=>$category]);
+        // Process options if any
+        $options = json_decode($_POST['options_json'] ?? '[]', true);
+        if (is_array($options)) {
+            foreach ($options as $opt) {
+                $optGroup = trim($opt['group'] ?? '');
+                $optName  = trim($opt['name'] ?? '');
+                $optPrice = floatval($opt['price'] ?? 0);
+                if ($optGroup !== '' && $optName !== '') {
+                    $stmtOpt = $pdo->prepare("INSERT INTO menu_item_options (menu_item_id, option_group, option_name, additional_price) VALUES (?, ?, ?, ?)");
+                    $stmtOpt->execute([$id, $optGroup, $optName, $optPrice]);
+                }
+            }
+        }
+
+        // Fetch inserted options to return in response
+        $stmtFetchOpt = $pdo->prepare("SELECT option_id, menu_item_id, option_group, option_name, additional_price FROM menu_item_options WHERE menu_item_id = ? ORDER BY option_id ASC");
+        $stmtFetchOpt->execute([$id]);
+        $addedOpts = $stmtFetchOpt->fetchAll();
+
+        echo json_encode(['success'=>true, 'id'=>$id, 'name'=>$name, 'price'=>$price, 'category'=>$category, 'options'=>$addedOpts]);
         exit;
     }
 
@@ -217,15 +236,15 @@ $knownCatIds = array_column($CATEGORIES, 'id');
                  font-weight:600; background:#fde8e8; border-left:4px solid var(--danger-red);
                  border-radius:6px; padding:8px 12px; margin-bottom:12px;"></div>
             <form id="addForm" onsubmit="return false;">
-                <div style="flex-grow:2;">
+                <div style="flex-grow:2; min-width: 250px;">
                     <label for="food_name">Food Name</label>
                     <input type="text" id="food_name" placeholder="e.g. Roti Sardine" autocomplete="off">
                 </div>
-                <div>
+                <div style="min-width: 100px;">
                     <label for="price">Price (RM)</label>
-                    <input type="number" id="price" placeholder="e.g. 6.00" step="0.10" min="0.10" style="min-width:100px;">
+                    <input type="number" id="price" placeholder="e.g. 6.00" step="0.10" min="0.10">
                 </div>
-                <div>
+                <div style="min-width: 200px;">
                     <label for="category">Category</label>
                     <select id="category" style="margin:8px 0 15px;">
                         <option value="">-- Select Category --</option>
@@ -234,9 +253,23 @@ $knownCatIds = array_column($CATEGORIES, 'id');
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <button type="button" id="addBtn" style="margin-bottom:15px;" onclick="addItem()">
-                    Add to Menu
-                </button>
+                
+                <!-- Dynamic Options Section -->
+                <div style="width: 100%; margin-top: 15px; border-top: 1px dashed #e0d5c5; padding-top: 15px;">
+                    <h4 style="margin: 0 0 10px; color: var(--accent-orange); font-size: 0.9rem;">⚙️ Customize Options / Add-Ons (Optional)</h4>
+                    <div id="optionsContainer">
+                        <!-- Option rows will be appended here dynamically -->
+                    </div>
+                    <button type="button" class="btn-action" style="background:#5E2A25; color:#fff; font-size:0.75rem; padding:6px 14px; margin-top: 5px; border-radius:6px;" onclick="addOptionRow()">
+                        ➕ Add Option Row
+                    </button>
+                </div>
+
+                <div style="width: 100%; text-align: right; margin-top: 15px;">
+                    <button type="button" id="addBtn" onclick="addItem()">
+                        Add to Menu
+                    </button>
+                </div>
             </form>
         </div>
 
@@ -443,6 +476,21 @@ endforeach;
                 .catch(() => onError('Network error. Please try again.'));
         }
 
+        // ── ADD OPTION ROW ──
+        function addOptionRow() {
+            var container = document.getElementById('optionsContainer');
+            var div = document.createElement('div');
+            div.className = 'option-row';
+            div.style.cssText = 'display: flex; gap: 10px; align-items: center; margin-bottom: 8px;';
+            div.innerHTML = 
+                '<input type="text" class="opt-group" placeholder="Group (e.g. Add Ons)" style="flex: 1; margin: 0; padding: 6px 10px; font-size: 0.82rem;">' +
+                '<input type="text" class="opt-name" placeholder="Name (e.g. Extra Cheese)" style="flex: 1.5; margin: 0; padding: 6px 10px; font-size: 0.82rem;">' +
+                '<input type="number" class="opt-price" placeholder="Price (e.g. 1.50)" step="0.05" min="0.00" value="0.00" style="width: 100px; margin: 0; padding: 6px 10px; font-size: 0.82rem;">' +
+                '<button type="button" style="background:#5E2A25; color:#fff; border:none; padding: 8px 12px; border-radius: 4px; cursor:pointer;" onclick="this.parentElement.remove()">🗑</button>';
+            container.appendChild(div);
+            div.querySelector('.opt-group').focus();
+        }
+
         // ── ADD ──
         function addItem() {
             var name     = document.getElementById('food_name').value.trim();
@@ -460,18 +508,40 @@ endforeach;
             if (!price||price<=0){ errors.push('Enter a valid price.');  document.getElementById('price').style.borderColor = '#5E2A25'; }
             if (!category)       { errors.push('Select a category.'); }
 
+            // Collect options
+            var options = [];
+            var optRows = document.querySelectorAll('.option-row');
+            optRows.forEach(function(row) {
+                var g = row.querySelector('.opt-group').value.trim();
+                var n = row.querySelector('.opt-name').value.trim();
+                var p = parseFloat(row.querySelector('.opt-price').value) || 0;
+                if (g || n) {
+                    if (!g || !n) {
+                        errors.push('Option group and name are both required for each row.');
+                    } else {
+                        options.push({ group: g, name: n, price: p });
+                    }
+                }
+            });
+
             if (errors.length) { errEl.innerText = '⚠ ' + errors[0]; errEl.style.display='block'; return; }
 
             var btn = document.getElementById('addBtn');
             btn.disabled = true; btn.innerText = 'Adding…';
 
-            postAjax('add', {name:name, price:price.toFixed(2), category:category}, function(res){
+            postAjax('add', {
+                name: name,
+                price: price.toFixed(2),
+                category: category,
+                options_json: JSON.stringify(options)
+            }, function(res){
                 // Insert new row into the table
-                insertNewRow(res.id, res.name, res.price, res.category);
+                insertNewRow(res.id, res.name, res.price, res.category, res.options);
 
                 // Clear form
                 document.getElementById('food_name').value = '';
                 document.getElementById('price').value     = '';
+                document.getElementById('optionsContainer').innerHTML = '';
                 showToast('✅ "'+res.name+'" added to menu!');
                 btn.disabled = false; btn.innerText = 'Add to Menu';
 
@@ -482,7 +552,7 @@ endforeach;
             });
         }
 
-        function insertNewRow(id, name, price, category) {
+        function insertNewRow(id, name, price, category, options) {
             var tbody = document.getElementById('menuBody');
             var catId = category;
 
@@ -500,9 +570,22 @@ endforeach;
             tr.dataset.id       = id;
             tr.dataset.category = catId;
             tr.dataset.name     = name.toLowerCase();
+
+            var optionsHtml = '';
+            if (options && options.length > 0) {
+                optionsHtml = '<div style="margin-top: 5px; display: flex; flex-wrap: wrap; gap: 6px;">';
+                options.forEach(function(opt) {
+                    var priceStr = opt.additional_price > 0 ? " (+RM " + parseFloat(opt.additional_price).toFixed(2) + ")" : "";
+                    optionsHtml += '<span style="font-size: 0.72rem; background: #fdf5e6; color: #b85c38; border: 1px solid #ebd5c8; border-radius: 4px; padding: 1px 6px; font-weight: 500;">' +
+                        escHtml(opt.option_group) + ': ' + escHtml(opt.option_name) + priceStr +
+                        '</span>';
+                });
+                optionsHtml += '</div>';
+            }
+
             tr.innerHTML =
                 '<td style="color:#aaa;font-size:0.8rem;">#'+id+'</td>' +
-                '<td>'+escHtml(name)+'</td>' +
+                '<td><strong>'+escHtml(name)+'</strong>' + optionsHtml + '</td>' +
                 '<td style="font-size:0.8rem;color:#888;">'+escHtml(category)+'</td>' +
                 '<td class="price-cell" id="price_'+id+'">RM '+priceF+'</td>' +
                 '<td>' +
