@@ -357,7 +357,7 @@ endforeach;
         </div>
     </div>
 
-    <script src="js/admin_validation.js"></script>
+    <script src="js/admin_validation.js?v=<?= time() ?>"></script>
     <script>
         requireAuth();
 

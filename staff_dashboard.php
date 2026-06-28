@@ -226,7 +226,7 @@ $orders = $sOrd->fetchAll();
         </div>
     </div><!-- /.main-content -->
 
-    <script src="js/admin_validation.js"></script>
+    <script src="js/admin_validation.js?v=<?= time() ?>"></script>
     <script>
         requireAuth();
     </script>

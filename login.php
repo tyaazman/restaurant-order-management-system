@@ -235,7 +235,7 @@
 
     </div><!-- /.login-wrapper -->
 
-    <script src="js/admin_validation.js"></script>
+    <script src="js/admin_validation.js?v=<?= time() ?>"></script>
     <script>
         // ── Already logged in? Show a soft banner instead of force-redirect ──
         var alreadyIn = sessionStorage.getItem('ros_auth') === '1';
