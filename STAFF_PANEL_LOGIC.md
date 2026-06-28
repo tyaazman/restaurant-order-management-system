@@ -1,44 +1,47 @@
 # Staff Panel (Member 2) — Logic & Integration Guide
 
-This document explains the logic for the Staff Dashboard, Manage Orders, and Manage Menu pages, specifically for **Member 3 (Database/SQL)** and **Member 1 (Customer/Menu Frontend)** to understand how the modules connect.
+This document explains how the **Staff Dashboard, Manage Orders, and Manage Menu** pages integrate with the existing database and frontend. 
 
-## 🗄️ Database Schema & Connection (For Member 3)
-
-We are using the `restaurant_order_db` database. The connection file is located at `config/db.php` and connects via PDO (root/no password for local testing).
-
-The staff panel relies on the following tables and columns:
-
-### 1. `menu_items` Table
-- **Columns used:** `item_id`, `item_name`, `category`, `price`
-- **Logic:** `manage_menu.php` fetches all items from this table and displays them grouped by `category`. When staff adds, edits, or deletes an item, an AJAX request is sent to `manage_menu.php` to instantly run `INSERT`, `UPDATE`, or `DELETE` on this table.
-- **For Member 1:** The customer frontend should query `SELECT * FROM menu_items WHERE status = 'Available'` (if you add a status column) to display the menu to walk-in/online customers.
-
-### 2. `orders` Table
-- **Columns used:** `order_id`, `customer_name`, `order_type` (Walk-In/Online), `table_no`, `total_amount`, `order_status`, `order_date`.
-- **Logic:** `manage_orders.php` and `staff_dashboard.php` query this table (filtered by `DATE(order_date)`) to display the orders. 
-- **For Member 1:** When a customer places an order, your frontend must `INSERT` a new row into `orders` with the initial `order_status = 'Pending'`.
-
-### 3. `order_items` Table
-- **Columns used:** `order_item_id`, `order_id` (FK), `item_id` (FK), `quantity`, `subtotal`, `status` (Added `status VARCHAR(20) DEFAULT 'Pending'`).
-- **Logic:** `manage_orders.php` allows staff to update the status of *individual items* (e.g., from Pending to In Progress to Ready). When an item's status updates, PHP automatically recalculates the overall `order_status` in the `orders` table. 
-- **For Member 1:** When a customer places an order, your frontend must `INSERT` the corresponding items into `order_items` for the `order_id` generated above.
+**Important Note for the Team:** 
+The Staff Panel (Member 2's part) is built **entirely around Member 1's existing database structure and order flow**. We are strictly reading from and writing to the exact tables that Member 1/3 have already designed (`menu_items`, `orders`, `order_items`). We do not require any changes to the existing customer frontend or database schema, except for one minor addition to track per-item status.
 
 ---
 
-## ⚙️ Module Flow
+## 🗄️ How We Connect to the Existing Database (For Member 3)
 
-1. **Customer Orders (Member 1):** Customer scans QR / goes online -> browses `menu_items` -> submits order -> inserts to `orders` and `order_items`.
-2. **Staff Dashboard (Member 2):** Staff logs in (`login.php` using session auth) -> sees dashboard. Dashboard does a `SELECT COUNT(*)` on `orders` to show how many orders are Pending, In Progress, etc., for today.
-3. **Manage Orders (Member 2):** Staff updates the item statuses (Cooking/Ready) -> AJAX updates `order_items.status` -> updates `orders.order_status`.
-4. **Manage Menu (Member 2):** Staff adds new foods/prices -> AJAX updates `menu_items` -> Customers instantly see the updated menu.
+We use the existing `restaurant_order_db`. The connection logic for the staff panel is in `config/db.php` (using PDO). 
+
+Here is how the Staff Panel interacts with the tables you've already created:
+
+### 1. `menu_items` Table
+- **What we do:** `manage_menu.php` reads all items from this table to display to the staff. When staff adds, edits, or deletes a food item, we run standard `INSERT`, `UPDATE`, or `DELETE` queries directly on this table.
+- **Your part:** Continue inserting new menu items here. The Customer Frontend (Member 1) should simply read from this table to display the menu to walk-in/online customers. 
+
+### 2. `orders` Table
+- **What we do:** `staff_dashboard.php` and `manage_orders.php` read from this table to see incoming orders. We group them by `order_status` (Pending, In Progress, Ready, Completed) and display them to the staff. 
+- **Your part:** When a customer places an order on Member 1's frontend, simply `INSERT` a new row into this table with `order_status = 'Pending'`. The Staff Dashboard will automatically pick it up.
+
+### 3. `order_items` Table
+- **What we do:** We read this table to show the staff exactly what food is in each order. 
+- **Minor Addition:** We added a `status` column to this table (`status VARCHAR(20) DEFAULT 'Pending'`). This allows the kitchen staff to mark individual food items as "In Progress" or "Ready" while cooking. When all items in an order are "Ready", our PHP automatically updates the main `orders.order_status` to "Ready".
+- **Your part:** When a customer places an order, just `INSERT` the items into this table as usual. The new `status` column will automatically default to `'Pending'`.
+
+---
+
+## ⚙️ The Overall Flow
+
+1. **Customer Orders (Member 1's Flow):** Customer scans QR / goes online -> browses `menu_items` -> submits order -> Member 1's code inserts to `orders` and `order_items`.
+2. **Staff Dashboard (Member 2's Flow):** Staff logs in (`login.php`) -> sees dashboard. Dashboard does a `SELECT COUNT(*)` on the `orders` table to show how many orders are Pending, In Progress, etc., for today.
+3. **Kitchen Updates (Member 2's Flow):** Kitchen staff uses Manage Orders to update item statuses (e.g., Cooking -> Ready). This updates `order_items.status`, which in turn updates `orders.order_status`.
+4. **Menu Management (Member 2's Flow):** Admin uses Manage Menu to change prices or add new foods. This directly updates `menu_items`, instantly reflecting on Member 1's Customer Frontend.
 
 ---
 
 ## 📌 Files Included in Member 2's Push
 - **`login.php`**: Secure login page (credentials: `admin` / `admin123`).
-- **`staff_dashboard.php`**: Real-time PHP dashboard pulling from MySQL.
-- **`manage_orders.php`**: Order management with item-level status updates.
-- **`manage_menu.php`**: Menu CRUD system.
+- **`staff_dashboard.php`**: Real-time PHP dashboard reading from the `orders` table.
+- **`manage_orders.php`**: Order management system reading from `orders` and `order_items`.
+- **`manage_menu.php`**: Menu CRUD system reading/writing to `menu_items`.
 - **`config/db.php`**: Shared PDO database connection logic.
-- **`database/seed_menu.sql`**: Test data containing all 163 menu items and sample orders to help test the system before production.
-- **CSS & JS**: `css/admin.css` and `js/admin_validation.js` for UI styling and validation.
+- **`database/seed_menu.sql`**: We populated all 163 menu items into `menu_items` and added 7 sample orders to help test the system before production.
+- **CSS & JS**: `css/admin.css` and `js/admin_validation.js`.
