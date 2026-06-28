@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -138,7 +145,7 @@
         <!-- Date Filter -->
         <div class="date-filter">
             <label for="dashboardDate"><strong>Viewing Orders For:</strong></label>
-            <input type="date" id="dashboardDate" style="width: auto; margin: 0;" value="2026-06-12"
+            <input type="date" id="dashboardDate" style="width: auto; margin: 0;" value="<?php echo date('Y-m-d'); ?>"
                    onchange="loadDashboard(this.value)">
         </div>
 
@@ -187,98 +194,110 @@
 
     <script src="js/data.js"></script>
     <script>
-        const TODAY = '2026-06-12';
+        const TODAY = '<?php echo date("Y-m-d"); ?>';
         let allOrders = {};
 
         function loadDashboard(date) {
-            allOrders = ROS.getOrders();
-            const orders = allOrders[date] || [];
-            const isToday = (date === TODAY);
+            fetch('process/get_orders.php?date=' + date)
+                .then(response => response.json())
+                .then(orders => {
+                    const isToday = (date === TODAY);
 
-            // Update title
-            document.getElementById('tableTitle').innerText =
-                isToday ? "Today's Order Overview" : "Orders for " + date;
+                    // Update title
+                    document.getElementById('tableTitle').innerText =
+                        isToday ? "Today's Order Overview" : "Orders for " + date;
 
-            // ── Compute stats (each status in its own box) ──
-            let total = orders.length, pending = 0, inprog = 0, ready = 0, completed = 0;
-            orders.forEach(o => {
-                const s = ROS.getOverallStatus(o.items);
-                if      (s === 'pending')    pending++;
-                else if (s === 'inprogress') inprog++;
-                else if (s === 'ready')      ready++;
-                else if (s === 'completed')  completed++;
-            });
+                    // ── Compute stats (each status in its own box) ──
+                    let total = orders.length, pending = 0, inprog = 0, ready = 0, completed = 0;
+                    orders.forEach(o => {
+                        const s = ROS.getOverallStatus(o.items);
+                        if      (s === 'pending')    pending++;
+                        else if (s === 'inprogress') inprog++;
+                        else if (s === 'ready')      ready++;
+                        else if (s === 'completed')  completed++;
+                    });
 
-            document.getElementById('statTotal').innerText      = total;
-            document.getElementById('statPending').innerText    = pending;
-            document.getElementById('statInProgress').innerText = inprog;
-            document.getElementById('statReady').innerText      = ready;
-            document.getElementById('statCompleted').innerText  = completed;
+                    document.getElementById('statTotal').innerText      = total;
+                    document.getElementById('statPending').innerText    = pending;
+                    document.getElementById('statInProgress').innerText = inprog;
+                    document.getElementById('statReady').innerText      = ready;
+                    document.getElementById('statCompleted').innerText  = completed;
 
-            // ── Render rows ──
-            const tbody = document.getElementById('ordersBody');
-            if (orders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="no-orders">No orders recorded for this date.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = orders.map(order => {
-                const status  = ROS.getOverallStatus(order.items);
-                const summary = order.items.map(i => i.qty + 'x ' + i.name).join(', ');
-
-                let statusCell;
-
-                if (isToday) {
-                    if (status === 'pending') {
-                        // Pending → bar indicator with link to manage_orders
-                        statusCell = `
-                            <a href="manage_orders.php?date=${date}&order=${order.id}"
-                               class="status-bar bar-pending"
-                               title="Click to view and update this order">
-                                Pending Items
-                            </a>`;
-                    } else if (status === 'inprogress') {
-                        // In Progress → bar indicator with link to manage_orders
-                        statusCell = `
-                            <a href="manage_orders.php?date=${date}&order=${order.id}"
-                               class="status-bar bar-inprogress"
-                               title="Click to view and update this order">
-                                In Progress
-                            </a>`;
-                    } else if (status === 'ready') {
-                        // Ready → action button
-                        statusCell = `
-                            <button class="btn-ready" id="readyBtn_${order.id}"
-                                    onclick="markCompleted(${order.id}, '${date}')">
-                                ✅ Ready — Mark Collected
-                            </button>`;
-                    } else {
-                        // Completed → display only
-                        statusCell = `<span class="text-completed">✔ Completed</span>`;
+                    // ── Render rows ──
+                    const tbody = document.getElementById('ordersBody');
+                    if (orders.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="no-orders">No orders recorded for this date.</td></tr>';
+                        return;
                     }
-                } else {
-                    // Past dates — all display only
-                    statusCell = `<span class="text-completed">✔ Completed</span>`;
-                }
 
-                return `
-                    <tr id="dashRow_${order.id}">
-                        <td><strong>#${order.id}</strong></td>
-                        <td>${order.customer}</td>
-                        <td style="font-size:0.86rem; color:#555;">${summary}</td>
-                        <td><div class="status-cell">${statusCell}</div></td>
-                    </tr>`;
-            }).join('');
+                    tbody.innerHTML = orders.map(order => {
+                        const status  = ROS.getOverallStatus(order.items);
+                        const summary = order.items.map(i => {
+                            let itemStr = i.qty + 'x ' + i.name;
+                            if (i.remark) {
+                                itemStr += ` (${i.remark})`;
+                            }
+                            return itemStr;
+                        }).join(', ');
+
+                        let statusCell;
+
+                        if (isToday) {
+                            if (status === 'pending') {
+                                // Pending → bar indicator with link to manage_orders
+                                statusCell = `
+                                    <a href="manage_orders.php?date=${date}&order=${order.id}"
+                                       class="status-bar bar-pending"
+                                       title="Click to view and update this order">
+                                        Pending Items
+                                    </a>`;
+                            } else if (status === 'inprogress') {
+                                // In Progress → bar indicator with link to manage_orders
+                                statusCell = `
+                                    <a href="manage_orders.php?date=${date}&order=${order.id}"
+                                       class="status-bar bar-inprogress"
+                                       title="Click to view and update this order">
+                                        In Progress
+                                    </a>`;
+                            } else if (status === 'ready') {
+                                // Ready → action button
+                                statusCell = `
+                                    <button class="btn-ready" id="readyBtn_${order.id}"
+                                            onclick="markCompleted(${order.id}, '${date}')">
+                                        ✅ Ready — Mark Collected
+                                    </button>`;
+                            } else {
+                                // Completed → display only
+                                statusCell = `<span class="text-completed">✔ Completed</span>`;
+                            }
+                        } else {
+                            // Past dates — all display only
+                            statusCell = `<span class="text-completed">✔ Completed</span>`;
+                        }
+
+                        return `
+                            <tr id="dashRow_${order.id}">
+                                <td><strong>#${order.id}</strong></td>
+                                <td>${order.customer}</td>
+                                <td style="font-size:0.86rem; color:#555;">${summary}</td>
+                                <td><div class="status-cell">${statusCell}</div></td>
+                            </tr>`;
+                    }).join('');
+                });
         }
 
         function markCompleted(orderId, date) {
-            allOrders = ROS.getOrders();
-            const order = (allOrders[date] || []).find(o => o.id === orderId);
-            if (!order) return;
-            order.items.forEach(i => i.status = 'completed');
-            ROS.saveOrders(allOrders);
-            loadDashboard(date);
-            ROS.showToast('✅ Order #' + orderId + ' marked as Completed!');
+            const formData = new FormData();
+            formData.append('order_id', orderId);
+            formData.append('order_status', 'Completed');
+
+            fetch('process/update_order.php', {
+                method: 'POST',
+                body: formData
+            }).then(() => {
+                loadDashboard(date);
+                ROS.showToast('✅ Order #' + orderId + ' marked as Completed!');
+            });
         }
 
         // ── Init ──

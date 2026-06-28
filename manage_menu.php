@@ -1,3 +1,18 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit();
+}
+require_once __DIR__ . '/config/db.php';
+$menu_query = mysqli_query($conn, "SELECT menu_item_id AS id, item_name AS name, price, category_name AS category, IF(is_available = 1, 'Available', 'Unavailable') AS status FROM menu_items ORDER BY menu_item_id");
+$menu_items = [];
+while ($row = mysqli_fetch_assoc($menu_query)) {
+    $row['id'] = (int)$row['id'];
+    $row['price'] = (float)$row['price'];
+    $menu_items[] = $row;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -111,22 +126,22 @@
         <!-- ── Add New Item ── -->
         <div class="card" style="margin-bottom: 26px;">
             <h3 style="margin-top: 0;">➕ Add New Food Item</h3>
-            <form id="addForm" onsubmit="return false;">
+            <form id="addForm" action="process/add_menu.php" method="POST">
                 <div style="flex-grow: 2;">
                     <label for="food_name">Food Name</label>
-                    <input type="text" id="food_name" placeholder="e.g. Roti Sardine">
+                    <input type="text" id="food_name" name="item_name" placeholder="e.g. Roti Sardine" required>
                 </div>
                 <div>
                     <label for="price">Price (RM)</label>
-                    <input type="text" id="price" placeholder="e.g. 6.00" style="min-width:100px;">
+                    <input type="text" id="price" name="price" placeholder="e.g. 6.00" style="min-width:100px;" required>
                 </div>
                 <div>
                     <label for="category">Category</label>
-                    <select id="category" style="margin:8px 0 15px;">
+                    <select id="category" name="category" style="margin:8px 0 15px;">
                         <!-- Populated by JS -->
                     </select>
                 </div>
-                <button type="button" style="margin-bottom:15px;" onclick="addItem()">Add to Menu</button>
+                <button type="submit" style="margin-bottom:15px;">Add to Menu</button>
             </form>
         </div>
 
@@ -163,33 +178,33 @@
 
     <!-- ════ EDIT MODAL ════ -->
     <div class="modal-overlay" id="editModal" onclick="closeModalOnOverlay(event)">
-        <div class="modal-box">
-            <button class="modal-close" onclick="closeEditModal()">✕</button>
+        <form class="modal-box" action="process/edit_menu.php" method="POST">
+            <button type="button" class="modal-close" onclick="closeEditModal()">✕</button>
             <h3>✏️ Edit Food Item <span id="modalItemId" style="color:var(--accent-orange);"></span></h3>
 
-            <input type="hidden" id="modal_edit_id">
+            <input type="hidden" id="modal_edit_id" name="item_id">
 
             <label for="modal_food_name">Food Name</label>
-            <input type="text" id="modal_food_name" placeholder="e.g. Roti Kosong">
+            <input type="text" id="modal_food_name" name="item_name" placeholder="e.g. Roti Kosong" required>
 
             <label for="modal_price">Price (RM)</label>
-            <input type="text" id="modal_price" placeholder="e.g. 1.50">
+            <input type="text" id="modal_price" name="price" placeholder="e.g. 1.50" required>
 
             <label for="modal_category">Category</label>
-            <select id="modal_category">
+            <select id="modal_category" name="category">
                 <!-- Populated by JS -->
             </select>
 
             <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
-                <button onclick="saveEdit()">💾 Save Changes</button>
+                <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button type="submit">💾 Save Changes</button>
             </div>
-        </div>
+        </form>
     </div>
 
     <script src="js/data.js"></script>
     <script>
-        let menu = ROS.getMenu();
+        let menu = <?php echo json_encode($menu_items); ?>;
 
         // ── Build category options ──────────────────
         const catIds = ROS.CATEGORIES.map(c => c.id);
@@ -280,24 +295,6 @@
             tbody.innerHTML = html;
         }
 
-        // ── Add ─────────────────────────────────────
-        function addItem() {
-            const name     = document.getElementById('food_name').value.trim();
-            const price    = parseFloat(document.getElementById('price').value);
-            const category = document.getElementById('category').value;
-
-            if (!name)            { ROS.showToast('⚠ Please enter a food name.'); return; }
-            if (isNaN(price) || price <= 0) { ROS.showToast('⚠ Please enter a valid price.'); return; }
-
-            const maxId = menu.reduce((m, i) => Math.max(m, i.id), 0);
-            menu.push({ id: maxId + 1, name, price, category });
-            ROS.saveMenu(menu);
-            renderMenu();
-            document.getElementById('food_name').value = '';
-            document.getElementById('price').value    = '';
-            ROS.showToast('✅ "' + name + '" added to menu!');
-        }
-
         // ── Edit Modal ───────────────────────────────
         function openEditModal(id) {
             const item = menu.find(i => i.id === id);
@@ -318,38 +315,15 @@
             if (e.target === document.getElementById('editModal')) closeEditModal();
         }
 
-        function saveEdit() {
-            const id       = parseInt(document.getElementById('modal_edit_id').value);
-            const name     = document.getElementById('modal_food_name').value.trim();
-            const price    = parseFloat(document.getElementById('modal_price').value);
-            const category = document.getElementById('modal_category').value;
-
-            if (!name)            { ROS.showToast('⚠ Please enter a food name.'); return; }
-            if (isNaN(price) || price <= 0) { ROS.showToast('⚠ Please enter a valid price.'); return; }
-
-            const item = menu.find(i => i.id === id);
-            if (item) { item.name = name; item.price = price; item.category = category; }
-            ROS.saveMenu(menu);
-            renderMenu();
-            closeEditModal();
-            ROS.showToast('✅ "' + name + '" updated!');
-        }
-
         // ── Delete ───────────────────────────────────
         function deleteItem(id) {
             const item = menu.find(i => i.id === id);
             if (!item) return;
             if (!confirm('Delete "' + item.name + '" from the menu?')) return;
-            menu = menu.filter(i => i.id !== id);
-            ROS.saveMenu(menu);
-            renderMenu();
-            ROS.showToast('🗑 "' + item.name + '" removed.');
+            window.location.href = 'process/delete_menu.php?id=' + id;
         }
 
-        // Enter key on add form
-        document.getElementById('addForm').addEventListener('keydown', e => {
-            if (e.key === 'Enter') addItem();
-        });
+
 
         // ── Init ──────────────────────────────────────
         renderMenu();

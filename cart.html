@@ -24,6 +24,11 @@
             font-size: 1.1rem;
         }
 
+        #order-remark:focus {
+            border-color: #8B4513 !important;
+            box-shadow: 0 0 5px rgba(139, 69, 19, 0.3);
+        }
+
         .total-section {
             margin-top: 20px;
             text-align: right;
@@ -46,6 +51,12 @@
 
         <div id="total-price" class="total-section"></div>
 
+        <div style="margin-top: 20px; text-align: left;">
+            <label style="font-weight: bold; color: #8B4513; display: block; margin-bottom: 8px; font-size: 1.1rem;">Remark:</label>
+            <input type="text" id="order-remark" placeholder="e.g. No spicy, pack separately, extra gravy..." 
+                   style="width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; outline: none; transition: border-color 0.2s;">
+        </div>
+
         <div style="display: flex; gap: 10px; margin-top: 30px;">
             <a href="index.html" class="add-btn" style="flex:1; text-align:center; text-decoration:none;">Back to
                 Menu</a>
@@ -63,21 +74,52 @@
         // 2. Render items
         if (cart.length === 0) {
             listDiv.innerHTML = "<p style='text-align:center;'>Your cart is currently empty.</p>";
+            // Hide the remark input if cart is empty
+            const remarkDiv = document.getElementById('order-remark')?.parentElement;
+            if (remarkDiv) {
+                remarkDiv.style.display = 'none';
+            }
         } else {
             let total = 0;
-            cart.forEach(item => {
+            cart.forEach((item) => {
                 // Extract numeric value from string "RM 9.50" -> 9.50
                 const priceValue = parseFloat(item.price.replace('RM ', ''));
                 total += priceValue;
 
                 listDiv.innerHTML += `
                     <div class="cart-item">
-                        <span>${item.name}</span>
-                        <span>${item.price}</span>
+                        <span style="font-weight: 600; color: #8B4513;">${item.name}</span>
+                        <span style="font-weight: 600;">${item.price}</span>
                     </div>`;
             });
             // 3. Display Total
             totalDiv.innerHTML = `Total: RM ${total.toFixed(2)}`;
+        }
+
+        // 4. Load the remark from localStorage and sync it
+        const currentRemark = localStorage.getItem('cartRemark') || '';
+        const remarkInput = document.getElementById('order-remark');
+        if (remarkInput) {
+            remarkInput.value = currentRemark;
+            remarkInput.addEventListener('input', (e) => {
+                updateOrderRemark(e.target.value);
+            });
+        }
+
+        // Make sure all items have the customization notes on load
+        if (currentRemark && cart.length > 0) {
+            cart.forEach(item => {
+                item.customization_notes = currentRemark;
+            });
+            localStorage.setItem('myCart', JSON.stringify(cart));
+        }
+
+        function updateOrderRemark(val) {
+            localStorage.setItem('cartRemark', val);
+            cart.forEach(item => {
+                item.customization_notes = val;
+            });
+            localStorage.setItem('myCart', JSON.stringify(cart));
         }
     </script>
 </body>

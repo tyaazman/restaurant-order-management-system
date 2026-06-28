@@ -11,7 +11,7 @@
     <div class="card login-container">
         <h2 style="text-align: center; color: var(--accent-orange);">Staff Portal Login</h2>
         
-        <form id="loginForm" action="staff_dashboard.php" method="POST">
+        <form id="loginForm" action="process/login_process.php" method="POST">
             <label for="username">Username</label>
             <input type="text" id="username" name="username" placeholder="Enter username">
 

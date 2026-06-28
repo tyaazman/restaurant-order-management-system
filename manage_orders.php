@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -198,7 +205,7 @@
         <!-- Filter Bar -->
         <div class="filter-bar">
             <label>Date:</label>
-            <input type="date" id="dateFilter" value="2026-06-12" style="width:auto;margin:0;"
+            <input type="date" id="dateFilter" value="<?php echo date('Y-m-d'); ?>" style="width:auto;margin:0;"
                    onchange="loadOrders()">
 
             <label>Status:</label>
@@ -227,20 +234,20 @@
     <script>
         // ── State ────────────────────────────────────────
         let allOrders = {};
-        let currentDate = '2026-06-12';
+        let currentDate = '<?php echo date("Y-m-d"); ?>';
 
         // ── Load & Render Orders for a Date ──────────────
         function loadOrders() {
-            allOrders  = ROS.getOrders();
             currentDate = document.getElementById('dateFilter').value;
-            const orders = allOrders[currentDate] || [];
+            fetch('process/get_orders.php?date=' + currentDate)
+                .then(response => response.json())
+                .then(orders => {
+                    const container = document.getElementById('ordersContainer');
 
-            const container = document.getElementById('ordersContainer');
-
-            if (orders.length === 0) {
-                container.innerHTML = '';
-                document.getElementById('noResults').style.display = 'block';
-                document.getElementById('orderCount').innerText = '0 orders';
+                    if (orders.length === 0) {
+                        container.innerHTML = '';
+                        document.getElementById('noResults').style.display = 'block';
+                        document.getElementById('orderCount').innerText = '0 orders';
                 return;
             }
 
@@ -256,13 +263,14 @@
                     const sCfg = ROS.STATUS[item.status];
                     const domId = `pill_${order.id}_${item.id}`;
                     const selId = `sel_${order.id}_${item.id}`;
+                    const remarkHtml = item.remark ? `<br><small style="color: #A85530; font-style: italic; font-weight: bold;">Remark: ${item.remark}</small>` : '';
 
                     if (isCompleted) {
                         // Read-only for completed orders
                         return `
                         <tr>
                             <td>—</td>
-                            <td>${item.name}</td>
+                            <td>${item.name}${remarkHtml}</td>
                             <td>${item.qty}</td>
                             <td><span class="pill ${sCfg.pillClass}" id="${domId}">${sCfg.pillLabel}</span></td>
                             <td style="color:#aaa; font-size:0.8rem;">—</td>
@@ -274,7 +282,7 @@
                         <td style="text-align:center;">
                             <input type="checkbox" class="item-check" data-order="${order.id}">
                         </td>
-                        <td>${item.name}</td>
+                        <td>${item.name}${remarkHtml}</td>
                         <td>${item.qty}</td>
                         <td><span class="pill ${sCfg.pillClass}" id="${domId}">${sCfg.pillLabel}</span></td>
                         <td>
@@ -358,41 +366,27 @@
             }).join('');
 
             applyVisibilityFilter();
+            });
         }
 
         // ── Update single item status ─────────────────────
         function updateItem(itemId, orderId, newStatus) {
-            const order = (allOrders[currentDate] || []).find(o => o.id === orderId);
-            if (!order) return;
-            const item  = order.items.find(i => i.id === itemId);
-            if (!item) return;
-            item.status = newStatus;
-            ROS.saveOrders(allOrders);
-            refreshBadge(orderId);
-        }
+            let dbStatus = newStatus;
+            if (newStatus === 'pending') dbStatus = 'Pending';
+            else if (newStatus === 'inprogress') dbStatus = 'In Progress';
+            else if (newStatus === 'ready') dbStatus = 'Ready';
+            else if (newStatus === 'completed') dbStatus = 'Completed';
 
-        // ── Re-compute and update order badge ────────────
-        function refreshBadge(orderId) {
-            const order   = (allOrders[currentDate] || []).find(o => o.id === orderId);
-            if (!order) return;
-            const status  = ROS.getOverallStatus(order.items);
-            const cfg     = ROS.STATUS[status];
-            const badge   = document.getElementById('badge_' + orderId);
-            const card    = document.getElementById('order_' + orderId);
-            if (badge) { badge.className = 'overall-badge ' + cfg.badgeClass; badge.innerText = cfg.badgeLabel; }
-            if (card)  { card.dataset.status = status; }
+            const formData = new FormData();
+            formData.append('order_id', orderId);
+            formData.append('order_status', dbStatus);
 
-            // Also refresh pills (in case we came from bulk)
-            const selects = document.querySelectorAll(`#items_${orderId} .item-sel`);
-            selects.forEach(sel => {
-                const row    = sel.closest('tr');
-                const iId    = row ? row.dataset.itemId : null;
-                if (!iId) return;
-                const it     = order.items.find(x => x.id === iId);
-                if (!it) return;
-                const pill   = document.getElementById(`pill_${orderId}_${iId}`);
-                const sCfg   = ROS.STATUS[it.status];
-                if (pill) { pill.className = 'pill ' + sCfg.pillClass; pill.innerText = sCfg.pillLabel; }
+            fetch('process/update_order.php', {
+                method: 'POST',
+                body: formData
+            }).then(() => {
+                loadOrders();
+                ROS.showToast('✅ Order status updated!');
             });
         }
 
@@ -406,28 +400,23 @@
             );
             if (checked.length === 0) { ROS.showToast('No items selected.'); return; }
 
-            const order = (allOrders[currentDate] || []).find(o => o.id === orderId);
-            if (!order) return;
+            let dbStatus = newStatus;
+            if (newStatus === 'pending') dbStatus = 'Pending';
+            else if (newStatus === 'inprogress') dbStatus = 'In Progress';
+            else if (newStatus === 'ready') dbStatus = 'Ready';
+            else if (newStatus === 'completed') dbStatus = 'Completed';
 
-            checked.forEach(chk => {
-                const row    = chk.closest('tr');
-                const iId    = row.dataset.itemId;
-                const item   = order.items.find(i => i.id === iId);
-                if (item) item.status = newStatus;
-                const sel    = document.getElementById(`sel_${orderId}_${iId}`);
-                if (sel) sel.value = newStatus;
-                const pill   = document.getElementById(`pill_${orderId}_${iId}`);
-                const sCfg   = ROS.STATUS[newStatus];
-                if (pill) { pill.className = 'pill ' + sCfg.pillClass; pill.innerText = sCfg.pillLabel; }
-                chk.checked = false;
+            const formData = new FormData();
+            formData.append('order_id', orderId);
+            formData.append('order_status', dbStatus);
+
+            fetch('process/update_order.php', {
+                method: 'POST',
+                body: formData
+            }).then(() => {
+                loadOrders();
+                ROS.showToast(`Updated order status → ${dbStatus}`);
             });
-
-            ROS.saveOrders(allOrders);
-            refreshBadge(orderId);
-
-            const saEl = document.getElementById('selAll_' + orderId);
-            if (saEl) saEl.checked = false;
-            ROS.showToast(`Updated ${checked.length} item(s) → ${ROS.STATUS[newStatus].pillLabel}`);
         }
 
         // ── Select-all ───────────────────────────────────

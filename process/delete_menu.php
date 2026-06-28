@@ -6,19 +6,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'POST
     exit();
 }
 
-$item_id = (int) ($_GET['id'] ?? $_POST['item_id'] ?? 0);
+$menu_item_id = (int) ($_GET['id'] ?? $_POST['menu_item_id'] ?? 0);
 
-if ($item_id <= 0) {
+if ($menu_item_id <= 0) {
     echo "Error deleting menu item: invalid item id.";
     exit();
 }
 
-$stmt = mysqli_prepare($conn, "DELETE FROM menu_items WHERE item_id = ?");
+$stmt = mysqli_prepare($conn, "DELETE FROM menu_items WHERE menu_item_id = ?");
 if (!$stmt) {
     die("Error deleting menu item: " . mysqli_error($conn));
 }
 
-mysqli_stmt_bind_param($stmt, 'i', $item_id);
+mysqli_stmt_bind_param($stmt, 'i', $menu_item_id);
 
 if (mysqli_stmt_execute($stmt)) {
     mysqli_stmt_close($stmt);

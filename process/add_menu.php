@@ -30,12 +30,14 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK && $_
     move_uploaded_file($image_tmp, $upload_path);
 }
 
-$stmt = mysqli_prepare($conn, "INSERT INTO menu_items (item_name, category, price, image, status) VALUES (?, ?, ?, ?, ?)");
+$is_available = (strcasecmp($status, 'Available') === 0) ? 1 : 0;
+
+$stmt = mysqli_prepare($conn, "INSERT INTO menu_items (item_name, category_name, price, is_available) VALUES (?, ?, ?, ?)");
 if (!$stmt) {
     die("Error adding menu item: " . mysqli_error($conn));
 }
 
-mysqli_stmt_bind_param($stmt, 'ssdss', $item_name, $category, $price, $image_name, $status);
+mysqli_stmt_bind_param($stmt, 'ssdi', $item_name, $category, $price, $is_available);
 
 if (mysqli_stmt_execute($stmt)) {
     mysqli_stmt_close($stmt);

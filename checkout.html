@@ -21,10 +21,12 @@
             <h3 id="total-price"></h3>
         </div>
 
-        <form id="order-form">
+        <form id="order-form" action="process/add_order.php" method="POST">
+            <input type="hidden" name="cart_items" id="cart-items-input">
+            <input type="hidden" name="total_amount" id="total-amount-input">
             <div class="form-row">
                 <label>Order Type:</label>
-                <select id="order-type" onchange="toggleFields()">
+                <select id="order-type" name="order_type" onchange="toggleFields()">
                     <option value="online">Online Order</option>
                     <option value="walkin-takeaway">Walk-in Takeaway</option>
                     <option value="walkin-dinein">Walk-in Dine-in</option>
@@ -35,7 +37,7 @@
 
             <div class="form-row">
                 <label>Payment Method:</label>
-                <select>
+                <select name="payment_method">
                     <option>Cash</option>
                     <option>Online Banking</option>
                     <option>Credit/Debit Card</option>
@@ -53,26 +55,39 @@
 
         let total = 0;
         cart.forEach(item => {
-            listDiv.innerHTML += `<p>${item.name} - ${item.price}</p>`;
+            listDiv.innerHTML += `<p><strong>${item.name}</strong> - ${item.price}</p>`;
             total += parseFloat(item.price.replace('RM ', ''));
         });
         totalDiv.innerText = `Total: RM ${total.toFixed(2)}`;
 
+        // Show general remark if present
+        const generalRemark = localStorage.getItem('cartRemark');
+        if (generalRemark) {
+            const remarkDiv = document.createElement('div');
+            remarkDiv.style.marginTop = '15px';
+            remarkDiv.style.padding = '10px';
+            remarkDiv.style.background = '#f0e6d2';
+            remarkDiv.style.borderLeft = '4px solid #8B4513';
+            remarkDiv.style.fontSize = '0.95rem';
+            remarkDiv.innerHTML = `<strong>Remark:</strong> <span style="font-style: italic; color: #555;">${generalRemark}</span>`;
+            listDiv.appendChild(remarkDiv);
+        }
+
         function toggleFields() {
             const type = document.getElementById('order-type').value;
             // Start with Full Name for all types
-            let html = `<div class="form-row"><label>Full Name:</label><input type="text" required></div>`;
+            let html = `<div class="form-row"><label>Full Name:</label><input type="text" name="customer_name" required></div>`;
 
             if (type === 'online') {
-                html += `<div class="form-row"><label>Phone Number:</label><input type="text" required></div>
-                         <div class="form-row"><label>Email:</label><input type="email" required></div>
-                         <div class="form-row"><label>Shipping Address:</label><textarea required></textarea></div>`;
+                html += `<div class="form-row"><label>Phone Number:</label><input type="text" name="phone" required></div>
+                         <div class="form-row"><label>Email:</label><input type="email" name="email" required></div>
+                         <div class="form-row"><label>Shipping Address:</label><textarea name="address" required></textarea></div>`;
             } else if (type === 'walkin-takeaway') {
-                html += `<div class="form-row"><label>Email:</label><input type="email" required></div>
-                         <div class="form-row"><label>Phone Number:</label><input type="text" required></div>`;
+                html += `<div class="form-row"><label>Email:</label><input type="email" name="email" required></div>
+                         <div class="form-row"><label>Phone Number:</label><input type="text" name="phone" required></div>`;
             } else if (type === 'walkin-dinein') {
-                html += `<div class="form-row"><label>Table Number:</label><input type="number" required></div>
-                         <div class="form-row"><label>Email:</label><input type="email" required></div>`;
+                html += `<div class="form-row"><label>Table Number:</label><input type="number" name="table_no" required></div>
+                         <div class="form-row"><label>Email:</label><input type="email" name="email" required></div>`;
             }
             document.getElementById('dynamic-fields').innerHTML = html;
         }
@@ -81,10 +96,11 @@
         toggleFields();
 
         document.getElementById('order-form').onsubmit = (e) => {
-            e.preventDefault();
-            alert("Order Confirmed! A confirmation email has been sent.");
+            const cartInput = document.getElementById('cart-items-input');
+            const totalInput = document.getElementById('total-amount-input');
+            cartInput.value = JSON.stringify(cart);
+            totalInput.value = total.toFixed(2);
             localStorage.removeItem('myCart');
-            window.location.href = 'index.html';
         };
     </script>
 </body>
