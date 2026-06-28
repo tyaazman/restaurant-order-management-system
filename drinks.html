@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -31,79 +31,8 @@
 
         <h2 class="section-title">Non-Coffee</h2>
         <div class="grid-layout">
-            <script>
-                const drinks = [
-                    { name: "Teh O", hot: "2.3", cold: "2.5" },
-                    { name: "Teh Tarik", hot: "2.5", cold: "3.0" },
-                    { name: "Teh Halia", hot: "3.5", cold: "4.0" },
-                    { name: "Teh Sarbat", hot: "3.5", cold: "4.0" },
-                    { name: "Sirap", hot: "2.0", cold: "2.5" },
-                    { name: "Sirap Selasih", hot: "2.5", cold: "3.0" },
-                    { name: "Sirap Limau", hot: "2.7", cold: "3.0" },
-                    { name: "Sirap Laici", hot: "5.0", cold: "5.5" },
-                    { name: "Sirap Bandung", hot: null, cold: "3.5" },
-                    { name: "Sirap Bandung Cincau", hot: null, cold: "4.0" },
-                    { name: "Sirap Bandung Soda", hot: null, cold: "4.0" },
-                    { name: "Limau", hot: "2.7", cold: "3.0" },
-                    { name: "Asam Boy", hot: "2.7", cold: "3.0" },
-                    { name: "Extra Joss Susu", hot: null, cold: "4.0" },
-                    { name: "Vico", hot: "3.0", cold: "3.5" }
-                ];
-
-                drinks.forEach(drink => {
-                    document.write(`
-                        <div class="menu-card">
-                            <div class="card-content">
-                                <h3>${drink.name}</h3>
-                                <div class="add-on-section">
-                                    ${drink.hot ? `<label class="add-on-label"><input type="radio" name="${drink.name}"> Hot (RM ${drink.hot})</label>` : ""}
-                                    ${drink.cold ? `<label class="add-on-label"><input type="radio" name="${drink.name}"> Cold (RM ${drink.cold})</label>` : ""}
-                                </div>
-                                <button class="add-btn">+ Add to Cart</button>
-                            </div>
-                        </div>
-                    `);
-                });
-            </script>
+            <!-- Dynamically loaded from database -->
         </div>
-
-        <h2 class="section-title" style="margin-top: 50px;">Jus</h2>
-        <div class="grid-layout">
-            <script>
-                ["Orange", "Apple", "Watermelon", "Lychee", "Lemon"].forEach(jus => {
-                    document.write(`
-                        <div class="menu-card">
-                            <div class="card-content">
-                                <h3>Jus ${jus}</h3>
-                                <div class="add-on-section">
-                                    <label class="add-on-label"><input type="radio" name="jus_${jus}"> Hot (RM 4.70)</label>
-                                    <label class="add-on-label"><input type="radio" name="jus_${jus}"> Cold (RM 5.00)</label>
-                                </div>
-                                <button class="add-btn">+ Add to Cart</button>
-                            </div>
-                        </div>
-                    `);
-                });
-            </script>
-        </div>
-
-        <h2 class="section-title" style="margin-top: 50px;">Cold Dessert</h2>
-        <div class="grid-layout">
-            <script>
-                ["Cikong", "Ais Jelly Limau", "Cendol"].forEach(dessert => {
-                    document.write(`
-                        <div class="menu-card">
-                            <div class="card-content">
-                                <h3>${dessert}</h3>
-                                <p class="price">RM 6.00 (Cold)</p>
-                                <button class="add-btn">+ Add to Cart</button>
-                            </div>
-                        </div>
-                    `);
-                });
-            </script>
-        </div>
-
     </main>
 
     <div class="floating-cart">

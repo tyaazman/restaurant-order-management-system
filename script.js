@@ -12,14 +12,18 @@ document.addEventListener('DOMContentLoaded', () => {
         cartCountElement.innerText = cart.length;
     }
 
-    // 3. Find all the "Add to Cart" buttons on the page
-    const addButtons = document.querySelectorAll('.add-btn');
+    // 3. Floating cart icon click handler
+    const cartIcon = document.querySelector('.floating-cart');
+    if (cartIcon) {
+        cartIcon.addEventListener('click', () => {
+            window.location.href = 'cart.html';
+        });
+    }
 
-    // 4. Loop through every button and tell it what to do when clicked
-    addButtons.forEach(button => {
-        button.addEventListener('click', () => {
-
-            // Get the card element that the button belongs to
+    // 4. Use EVENT DELEGATION for cart additions since cards load dynamically
+    document.addEventListener('click', (e) => {
+        if (e.target && e.target.classList.contains('add-btn')) {
+            const button = e.target;
             const card = button.closest('.menu-card');
 
             // Extract the name
@@ -49,19 +53,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Get base price from card
             let basePrice = 0;
-            if (name === "Mac & Cheese") {
-                basePrice = 12.00;
-            } else {
-                const priceElement = card.querySelector('.price');
-                if (priceElement) {
-                    const basePriceStr = priceElement.innerText;
-                    const match = basePriceStr.match(/RM\s*(\d+(?:\.\d{1,2})?)/i);
-                    if (match) {
-                        basePrice = parseFloat(match[1]);
-                    } else {
-                        const rawNum = parseFloat(basePriceStr.replace(/[^\d.]/g, ''));
-                        if (!isNaN(rawNum)) basePrice = rawNum;
-                    }
+            const priceElement = card.querySelector('.price');
+            if (priceElement) {
+                const basePriceStr = priceElement.innerText;
+                const match = basePriceStr.match(/RM\s*(\d+(?:\.\d{1,2})?)/i);
+                if (match) {
+                    basePrice = parseFloat(match[1]);
+                } else {
+                    const rawNum = parseFloat(basePriceStr.replace(/[^\d.]/g, ''));
+                    if (!isNaN(rawNum)) basePrice = rawNum;
                 }
             }
 
@@ -114,14 +114,114 @@ document.addEventListener('DOMContentLoaded', () => {
                 button.innerText = originalText;
                 button.style.backgroundColor = originalColor;
             }, 1000);
-        });
+        }
     });
 
-    // 5. Make the floating cart icon clickable to go to cart.html
-    const cartIcon = document.querySelector('.floating-cart');
-    if (cartIcon) {
-        cartIcon.addEventListener('click', () => {
-            window.location.href = 'cart.html';
-        });
+    // 5. DYNAMIC MENU FETCHING & RENDERING
+    const pageCategoryMap = {
+        'index.html': 'Signature Sup',
+        'mee-rebus.html': 'Mee Rebus ZZ',
+        'sarapan.html': 'Sarapan',
+        'roti-canai.html': 'Roti Canai',
+        'set-tengah-hari.html': 'Set Tengah Hari',
+        'menu-ikan.html': 'Menu Ikan',
+        'ala-carte.html': 'Ala Carte Menu',
+        'western.html': 'Western Food',
+        'goreng-goreng.html': 'Goreng-Goreng',
+        'drinks.html': 'Drinks'
+    };
+
+    const filename = window.location.pathname.split('/').pop() || 'index.html';
+    const category = pageCategoryMap[filename];
+
+    if (category) {
+        const gridLayout = document.querySelector('.grid-layout');
+        if (gridLayout) {
+            // Show loading skeleton
+            gridLayout.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--header-maroon); font-weight: 600; padding: 40px; font-family: sans-serif;">⏳ Loading menu items...</div>';
+            
+            fetch('process/get_menu_by_category.php?category=' + encodeURIComponent(category))
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success) {
+                        gridLayout.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--header-maroon); padding: 40px; font-family: sans-serif;">⚠ Error loading menu: ${res.error}</div>`;
+                        return;
+                    }
+                    
+                    if (res.items.length === 0) {
+                        gridLayout.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #888; padding: 40px; font-family: sans-serif;">No items currently available in this category.</div>';
+                        return;
+                    }
+                    
+                    gridLayout.innerHTML = ''; // Clear loading
+                    
+                    res.items.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'menu-card';
+                        
+                        // Parse options
+                        let optionSectionHtml = '';
+                        if (item.options && item.options.length > 0) {
+                            // Group options by option_group
+                            const groups = {};
+                            item.options.forEach(opt => {
+                                if (!groups[opt.option_group]) {
+                                    groups[opt.option_group] = [];
+                                }
+                                groups[opt.option_group].push(opt);
+                            });
+                            
+                            optionSectionHtml = '<div class="add-on-section" style="margin-top: 10px; text-align: left; padding: 10px; background: rgba(0,0,0,0.02); border-radius: 6px;">';
+                            
+                            Object.keys(groups).forEach(groupName => {
+                                optionSectionHtml += `<h4 style="margin: 0 0 6px 0; font-size: 0.82rem; color: var(--header-maroon); font-weight: 700; font-family: sans-serif;">${escHtml(groupName)}</h4>`;
+                                const isRadio = groupName.toLowerCase().includes('pilihan') || groupName.toLowerCase().includes('choice') || groupName.toLowerCase().includes('option');
+                                
+                                groups[groupName].forEach((opt, idx) => {
+                                    const optId = `opt_${item.menu_item_id}_${opt.option_id}`;
+                                    const nameAttr = `group_${item.menu_item_id}_${groupName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                                    const inputType = isRadio ? 'radio' : 'checkbox';
+                                    const checkedAttr = (isRadio && idx === 0) ? 'checked' : '';
+                                    const priceVal = parseFloat(opt.additional_price);
+                                    
+                                    let priceLabel = '';
+                                    if (inputType === 'radio') {
+                                        priceLabel = `(RM ${priceVal.toFixed(2)})`;
+                                    } else {
+                                        priceLabel = priceVal > 0 ? `(+RM ${priceVal.toFixed(2)})` : '';
+                                    }
+                                    
+                                    optionSectionHtml += `
+                                        <label style="display: block; font-size: 0.78rem; font-weight: 500; color: #555; margin-bottom: 4px; cursor: pointer; user-select: none; font-family: sans-serif;">
+                                            <input type="${inputType}" name="${nameAttr}" id="${optId}" value="${opt.option_id}" ${checkedAttr} style="margin-right: 5px;">
+                                            ${escHtml(opt.option_name)} ${priceLabel}
+                                        </label>
+                                    `;
+                                });
+                            });
+                            
+                            optionSectionHtml += '</div>';
+                        }
+                        
+                        card.innerHTML = `
+                            <div class="card-content">
+                                <h3>${escHtml(item.item_name)}</h3>
+                                <p class="price">RM ${parseFloat(item.price).toFixed(2)}</p>
+                                ${optionSectionHtml}
+                                <button class="add-btn">+ Add to Cart</button>
+                            </div>
+                        `;
+                        
+                        gridLayout.appendChild(card);
+                    });
+                })
+                .catch(err => {
+                    gridLayout.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--header-maroon); padding: 40px; font-family: sans-serif;">⚠ Failed to connect to server.</div>';
+                });
+        }
+    }
+
+    function escHtml(s) {
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 });

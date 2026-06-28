@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -31,68 +31,8 @@
 
         <h2 class="section-title">Nasi Goreng</h2>
         <div class="grid-layout">
-            <!-- Helper function to generate cards -->
-            <script>
-                const nasiItems = [
-                    { name: "Nasi Goreng Biasa", price: "7.50" },
-                    { name: "Nasi Goreng Kampung", price: "8.00" },
-                    { name: "Nasi Goreng Cina", price: "7.50" },
-                    { name: "Nasi Goreng Ikan Masin", price: "8.50" },
-                    { name: "Nasi Goreng Cili Padi", price: "8.50" },
-                    { name: "Nasi Goreng Pattaya", price: "8.50" },
-                    { name: "Nasi Goreng Tom Yam", price: "9.00" },
-                    { name: "Nasi Goreng Belacan", price: "12.00" }
-                ];
-
-                nasiItems.forEach(item => {
-                    document.write(`
-                        <div class="menu-card">
-                            <div class="card-content">
-                                <h3>${item.name}</h3>
-                                <p class="price">RM ${item.price}</p>
-                                <div class="add-on-section">
-                                    <p class="add-on-title">Pilihan Protein:</p>
-                                    <label class="add-on-label"><input type="radio" name="${item.name.replace(/\s+/g, '_')}_protein"> Daging (+RM 1.00)</label>
-                                    <label class="add-on-label"><input type="radio" name="${item.name.replace(/\s+/g, '_')}_protein"> Udang (+RM 3.00)</label>
-                                    <label class="add-on-label"><input type="radio" name="${item.name.replace(/\s+/g, '_')}_protein"> Sotong (+RM 3.00)</label>
-                                </div>
-                                <button class="add-btn">+ Add to Cart</button>
-                            </div>
-                        </div>
-                    `);
-                });
-            </script>
+            <!-- Dynamically loaded from database -->
         </div>
-
-        <h2 class="section-title" style="margin-top: 50px;">Mee Goreng</h2>
-        <div class="grid-layout">
-            <script>
-                const meeItems = [
-                    { name: "Mee Goreng", price: "7.50" },
-                    { name: "Mee Hoon Goreng Singapore", price: "7.50" },
-                    { name: "Char Kuey Teow", price: "8.00" }
-                ];
-
-                meeItems.forEach(item => {
-                    document.write(`
-                        <div class="menu-card">
-                            <div class="card-content">
-                                <h3>${item.name}</h3>
-                                <p class="price">RM ${item.price}</p>
-                                <div class="add-on-section">
-                                    <p class="add-on-title">Pilihan Protein:</p>
-                                    <label class="add-on-label"><input type="radio" name="${item.name.replace(/\s+/g, '_')}_protein"> Daging (+RM 1.00)</label>
-                                    <label class="add-on-label"><input type="radio" name="${item.name.replace(/\s+/g, '_')}_protein"> Udang (+RM 3.00)</label>
-                                    <label class="add-on-label"><input type="radio" name="${item.name.replace(/\s+/g, '_')}_protein"> Sotong (+RM 3.00)</label>
-                                </div>
-                                <button class="add-btn">+ Add to Cart</button>
-                            </div>
-                        </div>
-                    `);
-                });
-            </script>
-        </div>
-
     </main>
 
     <div class="floating-cart">
