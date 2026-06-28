@@ -67,41 +67,36 @@ if (isset($_GET['ajax'])) {
 // ==========================================
 require_once 'config/db.php';
 
-/* Category display order (matches data.js CATEGORIES) */
+/* Category display order (matches database category_name values) */
 $CATEGORIES = [
-    ['id'=>'Sup ZZ',          'label'=>'Sup ZZ',          'section'=>'SIGNATURE'],
+    ['id'=>'Signature Sup',   'label'=>'Signature Sup',   'section'=>'SIGNATURE'],
     ['id'=>'Mee Rebus ZZ',    'label'=>'Mee Rebus ZZ',    'section'=>'SIGNATURE'],
-    ['id'=>'Ikan Siakap',     'label'=>'Ikan Siakap',     'section'=>'MENU IKAN'],
-    ['id'=>'Bakar-Bakar',     'label'=>'Bakar-Bakar',     'section'=>'MENU IKAN'],
-    ['id'=>'Masakan Panas',   'label'=>'Masakan Panas',   'section'=>'SARAPAN'],
-    ['id'=>'Roti Bakar',      'label'=>'Roti Bakar',      'section'=>'SARAPAN'],
-    ['id'=>'Set Nasi & Lauk', 'label'=>'Set Nasi & Lauk', 'section'=>'SET TENGAH HARI'],
+    ['id'=>'Sarapan',         'label'=>'Sarapan',         'section'=>'SARAPAN'],
     ['id'=>'Roti Canai',      'label'=>'Roti Canai',      'section'=>'ROTI CANAI'],
-    ['id'=>'Nasi Goreng',     'label'=>'Nasi Goreng',     'section'=>'GORENG-GORENG'],
-    ['id'=>'Mee Goreng',      'label'=>'Mee Goreng',      'section'=>'GORENG-GORENG'],
-    ['id'=>'Sup Ala Thai',    'label'=>'Sup Ala Thai',    'section'=>'ALA-CARTE'],
-    ['id'=>'Tomyam',          'label'=>'Tomyam',          'section'=>'ALA-CARTE'],
-    ['id'=>'Mee Kuah',        'label'=>'Mee Kuah',        'section'=>'ALA-CARTE'],
-    ['id'=>'Sayur',           'label'=>'Sayur',           'section'=>'ALA-CARTE'],
-    ['id'=>'Aneka Lauk Thai', 'label'=>'Aneka Lauk Thai', 'section'=>'ALA-CARTE'],
-    ['id'=>'Goreng Tepung',   'label'=>'Goreng Tepung',   'section'=>'ALA-CARTE'],
-    ['id'=>'Fried & Grill',   'label'=>'Fried & Grill',   'section'=>'WESTERN'],
-    ['id'=>'Spaghetti',       'label'=>'Spaghetti',       'section'=>'WESTERN'],
-    ['id'=>'Burger',          'label'=>'Burger',          'section'=>'WESTERN'],
-    ['id'=>'Sides',           'label'=>'Sides',           'section'=>'WESTERN'],
-    ['id'=>'Non-Coffee',      'label'=>'Non-Coffee',      'section'=>'MINUMAN'],
-    ['id'=>'Coffee',          'label'=>'Coffee',          'section'=>'MINUMAN'],
-    ['id'=>'Jus',             'label'=>'Jus',             'section'=>'MINUMAN'],
-    ['id'=>'Cold Dessert',    'label'=>'Cold Dessert',    'section'=>'MINUMAN'],
-    ['id'=>'Lain-Lain',       'label'=>'Lain-Lain',       'section'=>'LAIN-LAIN'],
+    ['id'=>'Set Tengah Hari', 'label'=>'Set Nasi & Lauk', 'section'=>'SET TENGAH HARI'],
+    ['id'=>'Menu Ikan',       'label'=>'Menu Ikan',       'section'=>'MENU IKAN'],
+    ['id'=>'Ala Carte Menu',  'label'=>'Ala Carte Menu',  'section'=>'ALA CARTE'],
+    ['id'=>'Western Food',    'label'=>'Western Food',    'section'=>'WESTERN'],
+    ['id'=>'Goreng-Goreng',   'label'=>'Goreng-Goreng',   'section'=>'GORENG-GORENG'],
+    ['id'=>'Drinks',          'label'=>'Drinks',          'section'=>'DRINKS'],
 ];
 
-/* Fetch all menu items */
+/* Fetch all menu items and options */
 try {
     $stmt      = $pdo->query("SELECT menu_item_id AS item_id, item_name, price, category_name AS category FROM menu_items ORDER BY menu_item_id ASC");
     $menuItems = $stmt->fetchAll();
+
+    $stmtOpt   = $pdo->query("SELECT option_id, menu_item_id, option_group, option_name, additional_price FROM menu_item_options ORDER BY option_id ASC");
+    $allOptions = $stmtOpt->fetchAll();
 } catch (PDOException $e) {
     $menuItems = [];
+    $allOptions = [];
+}
+
+/* Group options by menu_item_id */
+$optionsByItem = [];
+foreach ($allOptions as $opt) {
+    $optionsByItem[$opt['menu_item_id']][] = $opt;
 }
 
 /* Group by category */
@@ -305,7 +300,22 @@ foreach ($CATEGORIES as $cat):
         $id      = (int)$item['item_id'];
         echo "<tr id=\"row_{$id}\" class=\"item-row\" data-id=\"{$id}\" data-category=\"{$catEsc}\" data-name=\"".strtolower($item['item_name'])."\">";
         echo "<td style=\"color:#aaa;font-size:0.8rem;\">#{$id}</td>";
-        echo "<td>{$nameEsc}</td>";
+        echo "<td>";
+        echo "<strong>{$nameEsc}</strong>";
+        if (!empty($optionsByItem[$id])) {
+            echo '<div style="margin-top: 5px; display: flex; flex-wrap: wrap; gap: 6px;">';
+            foreach ($optionsByItem[$id] as $opt) {
+                $optGroup = htmlspecialchars($opt['option_group']);
+                $optName  = htmlspecialchars($opt['option_name']);
+                $optPrice = floatval($opt['additional_price']);
+                $priceStr = $optPrice > 0 ? " (+RM " . number_format($optPrice, 2) . ")" : "";
+                echo "<span style=\"font-size: 0.72rem; background: #fdf5e6; color: #b85c38; border: 1px solid #ebd5c8; border-radius: 4px; padding: 1px 6px; font-weight: 500;\">";
+                echo "{$optGroup}: {$optName}{$priceStr}";
+                echo "</span>";
+            }
+            echo '</div>';
+        }
+        echo "</td>";
         echo "<td style=\"font-size:0.8rem;color:#888;\">{$catEsc}</td>";
         echo "<td class=\"price-cell\" id=\"price_{$id}\">RM {$price}</td>";
         echo "<td>";
