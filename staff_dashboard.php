@@ -209,18 +209,12 @@ $orders = $sOrd->fetchAll();
                         </td>
                         <td>
                             <div class="status-cell">
-<?php if ($isToday): ?>
-<?php   if ($status === 'Pending'): ?>
-                                <a href="manage_orders.php?date=<?= $date ?>" class="status-bar bar-pending">Pending</a>
-<?php   elseif ($status === 'Preparing'): ?>
-                                <button class="btn-ready" onclick="markCompleted(<?= $oid ?>)">✅ Preparing — Mark Completed</button>
-<?php   else: ?>
-                                <span class="text-completed">✔ Completed</span>
-<?php   endif; ?>
+<?php if ($status === 'Pending'): ?>
+                                <span class="status-bar bar-pending">Pending</span>
+<?php elseif ($status === 'Preparing'): ?>
+                                <span class="status-bar bar-preparing">Preparing</span>
 <?php else: ?>
-                                <span class="text-<?= strtolower(str_replace(' ','',  $status)) ?>">
-                                    <?= htmlspecialchars($status) ?>
-                                </span>
+                                <span class="text-completed">✔ Completed</span>
 <?php endif; ?>
                             </div>
                         </td>
@@ -235,41 +229,6 @@ $orders = $sOrd->fetchAll();
     <script src="js/admin_validation.js"></script>
     <script>
         requireAuth();
-
-        function showToast(msg) {
-            var t = document.getElementById('ros-toast');
-            if (!t) {
-                t = document.createElement('div');
-                t.id = 'ros-toast';
-                Object.assign(t.style, {
-                    position:'fixed', bottom:'28px', right:'28px',
-                    background:'var(--text-brown)', color:'#fff',
-                    padding:'12px 22px', borderRadius:'8px',
-                    fontFamily:"'Poppins',sans-serif", fontWeight:'600', fontSize:'0.9rem',
-                    boxShadow:'0 4px 16px rgba(0,0,0,0.22)', zIndex:'9999', transition:'opacity 0.35s'
-                });
-                document.body.appendChild(t);
-            }
-            t.innerText = msg; t.style.opacity = '1';
-            clearTimeout(window._toastTimer);
-            window._toastTimer = setTimeout(() => t.style.opacity='0', 2800);
-        }
-
-        // Update order status to Completed via AJAX -> manage_orders endpoint
-        function markCompleted(orderId) {
-            var fd = new FormData();
-            fd.append('order_id', orderId);
-            fd.append('status', 'Completed');
-            fetch('manage_orders.php?ajax=update_order', { method:'POST', body:fd })
-                .then(r => r.json())
-                .then(function(res) {
-                    if (res.success) {
-                        showToast('✔ Order #'+orderId+' marked as Completed!');
-                        setTimeout(() => window.location.reload(), 1000);
-                    }
-                })
-                .catch(() => showToast('⚠ Network error.'));
-        }
     </script>
 </body>
 </html>
