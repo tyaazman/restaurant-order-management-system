@@ -119,22 +119,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 5. DYNAMIC MENU FETCHING & RENDERING
     const activeLink = document.querySelector('.category-nav a.active');
-    const activeText = activeLink ? activeLink.innerText.trim() : 'Sup ZZ';
+    const activeText = activeLink ? activeLink.textContent.trim().toLowerCase() : '';
 
     const categoryMap = {
-        'Sup ZZ': 'Signature Sup',
-        'Mee Rebus ZZ': 'Mee Rebus ZZ',
-        'Sarapan': 'Sarapan',
-        'Roti Canai': 'Roti Canai',
-        'Set Tengah Hari': 'Set Tengah Hari',
-        'Menu Ikan': 'Menu Ikan',
-        'Ala Carte Menu': 'Ala Carte Menu',
-        'Western Food': 'Western Food',
-        'Goreng-Goreng': 'Goreng-Goreng',
-        'Drinks': 'Drinks'
+        'sup zz': 'Signature Sup',
+        'mee rebus zz': 'Mee Rebus ZZ',
+        'sarapan': 'Sarapan',
+        'roti canai': 'Roti Canai',
+        'set tengah hari': 'Set Tengah Hari',
+        'menu ikan': 'Menu Ikan',
+        'ala carte menu': 'Ala Carte Menu',
+        'western food': 'Western Food',
+        'goreng-goreng': 'Goreng-Goreng',
+        'drinks': 'Drinks'
     };
 
-    const category = categoryMap[activeText];
+    const category = categoryMap[activeText] || 'Signature Sup';
+    console.log("ROS DEBUG: Active Tab Text = '" + activeText + "', Mapped Category = '" + category + "'");
 
     if (category) {
         const gridLayout = document.querySelector('.grid-layout');
