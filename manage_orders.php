@@ -3,45 +3,23 @@ session_start();
 require_once 'config/db.php';
 
 // ══════════════════════════════════════════════════════════
-//  AJAX ENDPOINT — Update individual item status
+//  AJAX ENDPOINT — Update Order Status
 // ══════════════════════════════════════════════════════════
 if (isset($_GET['ajax'])) {
     header('Content-Type: application/json');
     $action = $_GET['ajax'];
 
-    /* ── Update order_item status ── */
-    if ($action === 'update_item' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        $itemId = intval($_POST['item_id'] ?? 0);
-        $status = trim($_POST['status']   ?? '');
-        $allowed = ['Pending','In Progress','Ready','Completed'];
+    if ($action === 'update_order' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $orderId = intval($_POST['order_id'] ?? 0);
+        $status  = trim($_POST['status']   ?? '');
+        $allowed = ['Pending', 'Preparing', 'Completed'];
 
-        if (!$itemId || !in_array($status, $allowed)) {
+        if (!$orderId || !in_array($status, $allowed)) {
             echo json_encode(['success'=>false,'error'=>'Invalid data.']); exit;
         }
 
-        $pdo->prepare("UPDATE order_items SET status=? WHERE order_item_id=?")->execute([$status, $itemId]);
-
-        // Recompute overall order status from its items
-        $row    = $pdo->prepare("SELECT order_id FROM order_items WHERE order_item_id=?");
-        $row->execute([$itemId]);
-        $orderId = $row->fetchColumn();
-
-        $overall = computeOverall($pdo, $orderId);
-        $pdo->prepare("UPDATE orders SET order_status=? WHERE order_id=?")->execute([$overall, $orderId]);
-
-        echo json_encode(['success'=>true, 'overall_status'=>$overall, 'order_id'=>$orderId]);
-        exit;
-    }
-
-    /* ── Mark entire order as Completed ── */
-    if ($action === 'complete_order' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        $orderId = intval($_POST['order_id'] ?? 0);
-        if (!$orderId) { echo json_encode(['success'=>false]); exit; }
-
-        $pdo->prepare("UPDATE order_items SET status='Completed' WHERE order_id=?")->execute([$orderId]);
-        $pdo->prepare("UPDATE orders SET order_status='Completed' WHERE order_id=?")->execute([$orderId]);
-
-        echo json_encode(['success'=>true]);
+        $pdo->prepare("UPDATE orders SET order_status=? WHERE order_id=?")->execute([$status, $orderId]);
+        echo json_encode(['success'=>true, 'status'=>$status, 'order_id'=>$orderId]);
         exit;
     }
 
@@ -50,27 +28,12 @@ if (isset($_GET['ajax'])) {
 }
 
 // ══════════════════════════════════════════════════════════
-//  HELPERS
-// ══════════════════════════════════════════════════════════
-function computeOverall(PDO $pdo, int $orderId): string {
-    $s = $pdo->prepare("SELECT status FROM order_items WHERE order_id=?");
-    $s->execute([$orderId]);
-    $statuses = $s->fetchAll(PDO::FETCH_COLUMN);
-    if (empty($statuses)) return 'Pending';
-    $unique = array_unique($statuses);
-    if ($unique === ['Completed']) return 'Completed';
-    if (in_array('Ready', $statuses)) return 'Ready';
-    if (in_array('In Progress', $statuses)) return 'In Progress';
-    return 'Pending';
-}
-
-// ══════════════════════════════════════════════════════════
 //  REGULAR PAGE LOAD
 // ══════════════════════════════════════════════════════════
 $date         = $_GET['date']   ?? date('Y-m-d');
 $statusFilter = $_GET['status'] ?? '';
 
-$allowedStatuses = ['Pending','In Progress','Ready','Completed'];
+$allowedStatuses = ['Pending', 'Preparing', 'Completed'];
 
 /* ── Fetch orders for selected date ── */
 $sql    = "SELECT * FROM orders WHERE DATE(order_date) = ?";
@@ -79,7 +42,15 @@ if ($statusFilter && in_array($statusFilter, $allowedStatuses)) {
     $sql    .= " AND order_status = ?";
     $params[] = $statusFilter;
 }
-$sql .= " ORDER BY order_date DESC";
+// Sort by status: Pending -> Preparing -> Completed, then by date descending
+$sql .= " ORDER BY 
+            CASE order_status 
+                WHEN 'Pending' THEN 1 
+                WHEN 'Preparing' THEN 2 
+                WHEN 'Completed' THEN 3 
+                ELSE 4 
+            END ASC, 
+            order_date DESC";
 
 $stmt   = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -88,7 +59,7 @@ $orders = $stmt->fetchAll();
 /* ── Attach order items to each order ── */
 foreach ($orders as &$order) {
     $s2 = $pdo->prepare(
-        "SELECT oi.order_item_id, oi.quantity, oi.subtotal, oi.status,
+        "SELECT oi.order_item_id, oi.quantity, oi.subtotal,
                 m.item_name, m.price
          FROM order_items oi
          LEFT JOIN menu_items m ON oi.item_id = m.item_id
@@ -105,16 +76,19 @@ $countSql    = "SELECT order_status, COUNT(*) as cnt FROM orders WHERE DATE(orde
 $cStmt       = $pdo->prepare($countSql);
 $cStmt->execute([$date]);
 $countRows   = $cStmt->fetchAll();
-$countByStatus = ['Pending'=>0,'In Progress'=>0,'Ready'=>0,'Completed'=>0];
-foreach ($countRows as $cr) { $countByStatus[$cr['order_status']] = (int)$cr['cnt']; }
+$countByStatus = ['Pending'=>0,'Preparing'=>0,'Completed'=>0];
+foreach ($countRows as $cr) { 
+    if (isset($countByStatus[$cr['order_status']])) {
+        $countByStatus[$cr['order_status']] = (int)$cr['cnt']; 
+    }
+}
 $totalOrders = array_sum($countByStatus);
 
 /* ── Status config (badge classes + labels) ── */
 $STATUS_PHP = [
-    'Pending'     => ['badge'=>'badge-pending',    'pill'=>'pill-pending',    'icon'=>'⚠'],
-    'In Progress' => ['badge'=>'badge-inprogress',  'pill'=>'pill-inprogress',  'icon'=>'🍳'],
-    'Ready'       => ['badge'=>'badge-ready',       'pill'=>'pill-ready',       'icon'=>'✅'],
-    'Completed'   => ['badge'=>'badge-completed',   'pill'=>'pill-completed',   'icon'=>'✔'],
+    'Pending'     => ['badge'=>'badge-pending',    'icon'=>'⚠'],
+    'Preparing'   => ['badge'=>'badge-inprogress', 'icon'=>'🍳'],
+    'Completed'   => ['badge'=>'badge-completed',  'icon'=>'✔'],
 ];
 ?>
 <!DOCTYPE html>
@@ -144,7 +118,6 @@ $STATUS_PHP = [
         .summary-pill .pill-lbl  { font-size:0.75rem; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:0.05em; margin-top:2px; }
         .summary-pill.sp-pending     { border-top-color:#c89100; }
         .summary-pill.sp-inprogress  { border-top-color:var(--accent-orange); }
-        .summary-pill.sp-ready       { border-top-color:#2d7a4f; }
         .summary-pill.sp-completed   { border-top-color:#888; }
 
         /* ── Order card ── */
@@ -154,9 +127,9 @@ $STATUS_PHP = [
             border-left: 5px solid var(--bg-cream); transition:border-color 0.2s;
         }
         .order-card.status-Pending     { border-left-color: #c89100; }
-        .order-card.status-In_Progress { border-left-color: var(--accent-orange); }
-        .order-card.status-Ready       { border-left-color: #2d7a4f; }
-        .order-card.status-Completed   { border-left-color: #aaa; }
+        .order-card.status-Preparing   { border-left-color: var(--accent-orange); }
+        .order-card.status-Completed   { border-left-color: #aaa; opacity: 0.75; }
+        .order-card.status-Completed:hover { opacity: 1; }
 
         .order-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -169,21 +142,10 @@ $STATUS_PHP = [
         /* Badge */
         .badge-pending    { background:#fff3cd; color:#856404; border:1px solid #ffc107; }
         .badge-inprogress { background:#fff0e6; color:#7a3508; border:1px solid var(--accent-orange); }
-        .badge-ready      { background:#d4edda; color:#155724; border:1px solid #28a745; }
         .badge-completed  { background:#e2e3e5; color:#383d41; border:1px solid #adb5bd; }
         .status-badge {
             display:inline-block; padding:4px 12px; border-radius:20px;
             font-size:0.78rem; font-weight:700; letter-spacing:0.03em;
-        }
-
-        /* Item pill status */
-        .pill-pending    { background:#c89100; }
-        .pill-inprogress { background:var(--accent-orange); }
-        .pill-ready      { background:#2d7a4f; }
-        .pill-completed  { background:#888; }
-        .item-status-pill {
-            display:inline-block; padding:2px 9px; border-radius:12px;
-            font-size:0.72rem; font-weight:700; color:#fff; margin-left:6px;
         }
 
         /* Order body */
@@ -192,18 +154,19 @@ $STATUS_PHP = [
 
         /* Items table in card */
         .items-table { width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:12px; }
-        .items-table th { background:var(--bg-cream); color:var(--text-brown); padding:7px 10px; font-weight:600; text-align:left; }
+        .items-table th { background:var(--bg-cream); color:var(--text-brown); padding:7px 10px; font-weight:600; text-align:left; border-bottom:2px solid #e0d5c5; }
         .items-table td { padding:7px 10px; border-bottom:1px solid #f0e8df; }
         .items-table tr:last-child td { border-bottom:none; }
 
-        /* Status select */
-        .status-select { width:auto; margin:0; padding:4px 8px; font-size:0.8rem; border-radius:6px; border:1px solid #ddd; }
-
-        /* Order footer */
-        .order-footer { display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap; }
-        .order-total  { font-weight:700; color:var(--text-brown); font-size:0.9rem; }
-        .btn-complete { padding:6px 16px; font-size:0.82rem; background:var(--text-brown); }
-        .btn-complete:hover { opacity:0.85; }
+        /* Order footer & action buttons */
+        .order-footer { display:flex; gap:10px; align-items:center; justify-content:space-between; margin-top:10px; flex-wrap:wrap; background:#f9f6f2; padding:12px; border-radius:8px;}
+        .order-total  { font-weight:700; color:var(--text-brown); font-size:1rem; }
+        
+        .action-btns { display:flex; gap:8px; }
+        .btn-action { padding:6px 14px; font-size:0.82rem; font-weight:600; border-radius:6px; cursor:pointer; border:none; transition:opacity 0.2s; }
+        .btn-action:hover { opacity:0.85; }
+        .btn-preparing { background:var(--accent-orange); color:#fff; }
+        .btn-completed { background:#2d7a4f; color:#fff; }
 
         /* No orders */
         .no-orders { text-align:center; padding:60px 20px; color:#aaa; }
@@ -247,13 +210,9 @@ $STATUS_PHP = [
                 <div class="pill-num"><?= $countByStatus['Pending'] ?></div>
                 <div class="pill-lbl">⚠ Pending</div>
             </div>
-            <div class="summary-pill sp-inprogress" onclick="filterStatus('In Progress')" title="Filter: In Progress">
-                <div class="pill-num"><?= $countByStatus['In Progress'] ?></div>
-                <div class="pill-lbl">🍳 In Progress</div>
-            </div>
-            <div class="summary-pill sp-ready" onclick="filterStatus('Ready')" title="Filter: Ready">
-                <div class="pill-num"><?= $countByStatus['Ready'] ?></div>
-                <div class="pill-lbl">✅ Ready</div>
+            <div class="summary-pill sp-inprogress" onclick="filterStatus('Preparing')" title="Filter: Preparing">
+                <div class="pill-num"><?= $countByStatus['Preparing'] ?></div>
+                <div class="pill-lbl">🍳 Preparing</div>
             </div>
             <div class="summary-pill sp-completed" onclick="filterStatus('Completed')" title="Filter: Completed">
                 <div class="pill-num"><?= $countByStatus['Completed'] ?></div>
@@ -274,10 +233,9 @@ $STATUS_PHP = [
                 <strong>Status:</strong>
                 <select id="statusFilter" onchange="filterStatus(this.value)">
                     <option value="">All</option>
-                    <option value="Pending"     <?= $statusFilter==='Pending'     ?'selected':'' ?>>Pending</option>
-                    <option value="In Progress" <?= $statusFilter==='In Progress' ?'selected':'' ?>>In Progress</option>
-                    <option value="Ready"       <?= $statusFilter==='Ready'       ?'selected':'' ?>>Ready</option>
-                    <option value="Completed"   <?= $statusFilter==='Completed'   ?'selected':'' ?>>Completed</option>
+                    <option value="Pending"   <?= $statusFilter==='Pending'   ?'selected':'' ?>>Pending</option>
+                    <option value="Preparing" <?= $statusFilter==='Preparing' ?'selected':'' ?>>Preparing</option>
+                    <option value="Completed" <?= $statusFilter==='Completed' ?'selected':'' ?>>Completed</option>
                 </select>
 
                 <strong>Search:</strong>
@@ -319,7 +277,7 @@ $STATUS_PHP = [
                             Order #<?= $oid ?> — <?= htmlspecialchars($order['customer_name']) ?>
                             <span class="<?= $typeClass ?>"><?= htmlspecialchars($oType) ?></span>
                         </h4>
-                        <p><?= $oTime ?> &nbsp;|&nbsp; <?= $tableLabel ?> &nbsp;|&nbsp; RM <?= $oTotal ?></p>
+                        <p><?= $oTime ?> &nbsp;|&nbsp; <?= $tableLabel ?></p>
                     </div>
                     <div style="display:flex;align-items:center;gap:12px;">
                         <span class="status-badge <?= $sc['badge'] ?>" id="badge_<?= $oid ?>">
@@ -334,48 +292,44 @@ $STATUS_PHP = [
                     <table class="items-table">
                         <thead>
                             <tr>
-                                <th>Item</th>
-                                <th style="width:70px;">Qty</th>
-                                <th style="width:100px;">Subtotal</th>
-                                <th style="width:180px;">Item Status</th>
+                                <th>Item Name</th>
+                                <th style="width:100px; text-align:center;">Qty</th>
+                                <th style="width:120px; text-align:right;">Subtotal</th>
                             </tr>
                         </thead>
                         <tbody>
 <?php foreach ($order['items'] as $item):
-    $iid    = $item['order_item_id'];
-    $iName  = htmlspecialchars($item['item_name'] ?? '—');
-    $iStatus = $item['status'] ?? 'Pending';
-    $iSc    = $STATUS_PHP[$iStatus] ?? $STATUS_PHP['Pending'];
+    $iName = htmlspecialchars($item['item_name'] ?? '—');
 ?>
-                            <tr id="irow_<?= $iid ?>">
+                            <tr>
                                 <td><?= $iName ?></td>
-                                <td>x<?= $item['quantity'] ?></td>
-                                <td>RM <?= number_format((float)$item['subtotal'],2) ?></td>
-                                <td>
-                                    <select class="status-select" id="isel_<?= $iid ?>"
-                                            onchange="updateItemStatus(<?= $iid ?>, <?= $oid ?>, this.value)">
-                                        <option value="Pending"     <?= $iStatus==='Pending'     ?'selected':'' ?>>⚠ Pending</option>
-                                        <option value="In Progress" <?= $iStatus==='In Progress' ?'selected':'' ?>>🍳 In Progress</option>
-                                        <option value="Ready"       <?= $iStatus==='Ready'       ?'selected':'' ?>>✅ Ready</option>
-                                        <option value="Completed"   <?= $iStatus==='Completed'   ?'selected':'' ?>>✔ Completed</option>
-                                    </select>
-                                </td>
+                                <td style="text-align:center;">x<?= $item['quantity'] ?></td>
+                                <td style="text-align:right;">RM <?= number_format((float)$item['subtotal'],2) ?></td>
                             </tr>
 <?php endforeach; ?>
                         </tbody>
                     </table>
 
                     <div class="order-footer">
-                        <span class="order-total">Total: RM <?= $oTotal ?></span>
-                        <?php if ($order['address']): ?>
-                            <span style="font-size:0.8rem;color:#888;">📍 <?= htmlspecialchars($order['address']) ?></span>
-                        <?php endif; ?>
-                        <?php if ($oStatus !== 'Completed'): ?>
-                        <button class="btn-complete" id="completebtn_<?= $oid ?>"
-                                onclick="markCompleted(<?= $oid ?>)">
-                            ✔ Mark All Completed
-                        </button>
-                        <?php endif; ?>
+                        <div>
+                            <span class="order-total">Total: RM <?= $oTotal ?></span><br>
+                            <?php if ($order['address']): ?>
+                                <span style="font-size:0.8rem;color:#888;">📍 <?= htmlspecialchars($order['address']) ?></span>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="action-btns" id="actions_<?= $oid ?>">
+                            <?php if ($oStatus === 'Pending'): ?>
+                                <button class="btn-action btn-preparing" onclick="updateOrderStatus(<?= $oid ?>, 'Preparing')">
+                                    🍳 Start Preparing
+                                </button>
+                            <?php elseif ($oStatus === 'Preparing'): ?>
+                                <button class="btn-action btn-completed" onclick="updateOrderStatus(<?= $oid ?>, 'Completed')">
+                                    ✔ Mark Completed
+                                </button>
+                            <?php endif; ?>
+                            <!-- No buttons if Completed -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -387,14 +341,6 @@ $STATUS_PHP = [
     <script src="js/admin_validation.js"></script>
     <script>
         requireAuth();
-
-        // ── Status config ──────────────────────────────────────
-        const STATUS_CONFIG = {
-            'Pending':     { badge:'badge-pending',    icon:'⚠' },
-            'In Progress': { badge:'badge-inprogress', icon:'🍳' },
-            'Ready':       { badge:'badge-ready',      icon:'✅' },
-            'Completed':   { badge:'badge-completed',  icon:'✔' },
-        };
 
         // ── Toast ──────────────────────────────────────────────
         function showToast(msg, isErr) {
@@ -450,69 +396,22 @@ $STATUS_PHP = [
             chevron.classList.toggle('open', !isOpen);
         }
 
-        // ── Update individual item status ─────────────────────
-        function updateItemStatus(itemId, orderId, newStatus) {
-            var fd = new FormData();
-            fd.append('item_id', itemId);
-            fd.append('status', newStatus);
-
-            fetch('manage_orders.php?ajax=update_item', { method:'POST', body:fd })
-                .then(r => r.json())
-                .then(function(res) {
-                    if (!res.success) { showToast('⚠ '+(res.error||'Update failed.'), true); return; }
-
-                    // Update the overall order badge
-                    var badge = document.getElementById('badge_'+orderId);
-                    var card  = document.getElementById('card_'+orderId);
-                    var sc    = STATUS_CONFIG[res.overall_status] || STATUS_CONFIG['Pending'];
-
-                    if (badge) {
-                        badge.className = 'status-badge '+sc.badge;
-                        badge.innerText = sc.icon+' '+res.overall_status;
-                    }
-
-                    // Update card border class
-                    if (card) {
-                        card.className = card.className.replace(/status-\S+/, 'status-'+res.overall_status.replace(' ','_'));
-                    }
-
-                    // Show/hide "Mark Completed" button
-                    var cbtn = document.getElementById('completebtn_'+orderId);
-                    if (cbtn) cbtn.style.display = res.overall_status === 'Completed' ? 'none' : '';
-
-                    showToast('✅ Status updated: '+newStatus);
-                })
-                .catch(() => showToast('⚠ Network error.', true));
-        }
-
-        // ── Mark entire order as Completed ────────────────────
-        function markCompleted(orderId) {
-            if (!confirm('Mark ALL items in Order #'+orderId+' as Completed?')) return;
+        // ── Update Order Status ───────────────────────────────
+        function updateOrderStatus(orderId, newStatus) {
+            if (newStatus === 'Completed' && !confirm('Mark Order #'+orderId+' as Completed?')) return;
 
             var fd = new FormData();
             fd.append('order_id', orderId);
+            fd.append('status', newStatus);
 
-            fetch('manage_orders.php?ajax=complete_order', { method:'POST', body:fd })
+            fetch('manage_orders.php?ajax=update_order', { method:'POST', body:fd })
                 .then(r => r.json())
                 .then(function(res) {
-                    if (!res.success) { showToast('⚠ Failed.', true); return; }
-
-                    // Update all selects in this card
-                    var card = document.getElementById('card_'+orderId);
-                    if (card) {
-                        card.querySelectorAll('.status-select').forEach(s => s.value = 'Completed');
-                        var badge = document.getElementById('badge_'+orderId);
-                        if (badge) {
-                            badge.className = 'status-badge badge-completed';
-                            badge.innerText = '✔ Completed';
-                        }
-                        card.className = card.className.replace(/status-\S+/, 'status-Completed');
-                    }
-
-                    var cbtn = document.getElementById('completebtn_'+orderId);
-                    if (cbtn) cbtn.style.display = 'none';
-
-                    showToast('✔ Order #'+orderId+' marked as Completed!');
+                    if (!res.success) { showToast('⚠ '+(res.error||'Update failed.'), true); return; }
+                    
+                    showToast('✅ Order #'+orderId+' status updated to '+newStatus);
+                    // Reload to reflect sorting changes automatically
+                    setTimeout(() => window.location.reload(), 600);
                 })
                 .catch(() => showToast('⚠ Network error.', true));
         }

@@ -18,13 +18,12 @@ Here is how the Staff Panel interacts with the tables you've already created:
 - **Your part:** Continue inserting new menu items here. The Customer Frontend (Member 1) should simply read from this table to display the menu to walk-in/online customers. 
 
 ### 2. `orders` Table
-- **What we do:** `staff_dashboard.php` and `manage_orders.php` read from this table to see incoming orders. We group them by `order_status` (Pending, In Progress, Ready, Completed) and display them to the staff. 
+- **What we do:** `staff_dashboard.php` and `manage_orders.php` read from this table to see incoming orders. We group them by `order_status` (Pending, Preparing, Completed) and display them to the staff. 
 - **Your part:** When a customer places an order on Member 1's frontend, simply `INSERT` a new row into this table with `order_status = 'Pending'`. The Staff Dashboard will automatically pick it up.
 
 ### 3. `order_items` Table
 - **What we do:** We read this table to show the staff exactly what food is in each order. 
-- **Minor Addition:** We added a `status` column to this table (`status VARCHAR(20) DEFAULT 'Pending'`). This allows the kitchen staff to mark individual food items as "In Progress" or "Ready" while cooking. When all items in an order are "Ready", our PHP automatically updates the main `orders.order_status` to "Ready".
-- **Your part:** When a customer places an order, just `INSERT` the items into this table as usual. The new `status` column will automatically default to `'Pending'`.
+- **Your part:** When a customer places an order, just `INSERT` the items into this table as usual.
 
 ---
 
@@ -32,7 +31,7 @@ Here is how the Staff Panel interacts with the tables you've already created:
 
 1. **Customer Orders (Member 1's Flow):** Customer scans QR / goes online -> browses `menu_items` -> submits order -> Member 1's code inserts to `orders` and `order_items`.
 2. **Staff Dashboard (Member 2's Flow):** Staff logs in (`login.php`) -> sees dashboard. Dashboard does a `SELECT COUNT(*)` on the `orders` table to show how many orders are Pending, In Progress, etc., for today.
-3. **Kitchen Updates (Member 2's Flow):** Kitchen staff uses Manage Orders to update item statuses (e.g., Cooking -> Ready). This updates `order_items.status`, which in turn updates `orders.order_status`.
+3. **Kitchen Updates (Member 2's Flow):** Kitchen staff uses Manage Orders to update the overall order status (Pending -> Preparing -> Completed). This directly updates `orders.order_status`.
 4. **Menu Management (Member 2's Flow):** Admin uses Manage Menu to change prices or add new foods. This directly updates `menu_items`, instantly reflecting on Member 1's Customer Frontend.
 
 ---

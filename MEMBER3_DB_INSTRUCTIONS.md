@@ -30,7 +30,7 @@ Here is the exact schema my Staff Panel is reading from/writing to. Please ensur
 - `order_type` (VARCHAR - e.g., 'Walk-In' or 'Online')
 - `table_no` (VARCHAR, optional)
 - `total_amount` (DECIMAL 10,2)
-- `order_status` (VARCHAR, default 'Pending')
+- `order_status` (VARCHAR, default 'Pending') — *Statuses used: Pending, Preparing, Completed*
 - `order_date` (TIMESTAMP or DATETIME)
 
 ### `order_items`
@@ -40,7 +40,6 @@ Here is the exact schema my Staff Panel is reading from/writing to. Please ensur
 - `item_id` (INT, Foreign Key linking to `menu_items`)
 - `quantity` (INT)
 - `subtotal` (DECIMAL 10,2)
-- **`status` (VARCHAR, default 'Pending')** 👈 *Note: I added this column so kitchen staff can mark individual foods as "Cooking" or "Ready"!*
 
 ## 3. Data & Testing
 Since **Member 1 has already handled the menu data**, please follow Member 1's data for the menu items. You do not need to use my seed data for the menu. 

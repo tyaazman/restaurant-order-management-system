@@ -11,7 +11,7 @@ $sStat = $pdo->prepare(
     "SELECT order_status, COUNT(*) AS cnt FROM orders WHERE DATE(order_date) = ? GROUP BY order_status"
 );
 $sStat->execute([$date]);
-$stats = ['Pending'=>0,'In Progress'=>0,'Ready'=>0,'Completed'=>0];
+$stats = ['Pending'=>0,'Preparing'=>0,'Completed'=>0];
 foreach ($sStat->fetchAll() as $r) {
     if (isset($stats[$r['order_status']])) $stats[$r['order_status']] = (int)$r['cnt'];
 }
@@ -64,8 +64,7 @@ $orders = $sOrd->fetchAll();
             color: var(--accent-orange);
         }
         .stat-box.box-pending    p { color: #5E2A25; }
-        .stat-box.box-inprogress p { color: #a85530; }
-        .stat-box.box-ready      p { color: #c47a2b; }
+        .stat-box.box-preparing  p { color: #a85530; }
         .stat-box.box-completed  p { color: #2d7a4f; }
 
         /* ── Date Filter ── */
@@ -84,10 +83,10 @@ $orders = $sOrd->fetchAll();
         .status-bar:hover { filter: brightness(0.93); transform: translateX(2px); }
 
         .status-bar.bar-pending    { background:rgba(94,42,37,0.09);  color:#5E2A25; border-color:#5E2A25; }
-        .status-bar.bar-inprogress { background:rgba(168,85,48,0.09); color:#a85530; border-color:#a85530; }
+        .status-bar.bar-preparing  { background:rgba(168,85,48,0.09); color:#a85530; border-color:#a85530; }
 
         .status-bar.bar-pending::before,
-        .status-bar.bar-inprogress::before {
+        .status-bar.bar-preparing::before {
             content:''; width:8px; height:8px; border-radius:50%;
             background:currentColor; flex-shrink:0;
             animation:pulseDot 1.2s ease-in-out infinite;
@@ -138,8 +137,8 @@ $orders = $sOrd->fetchAll();
                    onchange="window.location.href='staff_dashboard.php?date='+this.value">
         </div>
 
-        <!-- ── 5 Stat Boxes ── -->
-        <div class="grid">
+        <!-- ── Stat Boxes ── -->
+        <div class="grid" style="grid-template-columns: repeat(4, 1fr);">
             <div class="card stat-box" onclick="window.location.href='manage_orders.php?date=<?= $date ?>'">
                 <h3>Total Orders</h3>
                 <p><?= $totalOrders ?></p>
@@ -148,13 +147,9 @@ $orders = $sOrd->fetchAll();
                 <h3>⚠ Pending</h3>
                 <p><?= $stats['Pending'] ?></p>
             </div>
-            <div class="card stat-box box-inprogress" onclick="window.location.href='manage_orders.php?date=<?= $date ?>&status=In+Progress'">
-                <h3>🍳 In Progress</h3>
-                <p><?= $stats['In Progress'] ?></p>
-            </div>
-            <div class="card stat-box box-ready" onclick="window.location.href='manage_orders.php?date=<?= $date ?>&status=Ready'">
-                <h3>✅ Ready</h3>
-                <p><?= $stats['Ready'] ?></p>
+            <div class="card stat-box box-preparing" onclick="window.location.href='manage_orders.php?date=<?= $date ?>&status=Preparing'">
+                <h3>🍳 Preparing</h3>
+                <p><?= $stats['Preparing'] ?></p>
             </div>
             <div class="card stat-box box-completed" onclick="window.location.href='manage_orders.php?date=<?= $date ?>&status=Completed'">
                 <h3>✔ Completed</h3>
@@ -216,11 +211,9 @@ $orders = $sOrd->fetchAll();
                             <div class="status-cell">
 <?php if ($isToday): ?>
 <?php   if ($status === 'Pending'): ?>
-                                <a href="manage_orders.php?date=<?= $date ?>" class="status-bar bar-pending">Pending Items</a>
-<?php   elseif ($status === 'In Progress'): ?>
-                                <a href="manage_orders.php?date=<?= $date ?>" class="status-bar bar-inprogress">In Progress</a>
-<?php   elseif ($status === 'Ready'): ?>
-                                <button class="btn-ready" onclick="markCompleted(<?= $oid ?>)">✅ Ready — Mark Collected</button>
+                                <a href="manage_orders.php?date=<?= $date ?>" class="status-bar bar-pending">Pending</a>
+<?php   elseif ($status === 'Preparing'): ?>
+                                <button class="btn-ready" onclick="markCompleted(<?= $oid ?>)">✅ Preparing — Mark Completed</button>
 <?php   else: ?>
                                 <span class="text-completed">✔ Completed</span>
 <?php   endif; ?>
@@ -262,11 +255,12 @@ $orders = $sOrd->fetchAll();
             window._toastTimer = setTimeout(() => t.style.opacity='0', 2800);
         }
 
-        // Mark Ready order as Completed via AJAX → manage_orders endpoint
+        // Update order status to Completed via AJAX -> manage_orders endpoint
         function markCompleted(orderId) {
             var fd = new FormData();
             fd.append('order_id', orderId);
-            fetch('manage_orders.php?ajax=complete_order', { method:'POST', body:fd })
+            fd.append('status', 'Completed');
+            fetch('manage_orders.php?ajax=update_order', { method:'POST', body:fd })
                 .then(r => r.json())
                 .then(function(res) {
                     if (res.success) {
