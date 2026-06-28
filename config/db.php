@@ -1,4 +1,7 @@
 <?php
+// Set default timezone to match database timestamps
+date_default_timezone_set('Asia/Kuala_Lumpur');
+
 /**
  * Database Connection — Restaurant Order System
  * Database: restaurant_order_db (XAMPP MySQL, root / no password)
