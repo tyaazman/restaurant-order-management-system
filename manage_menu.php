@@ -141,8 +141,10 @@ $knownCatIds = array_column($CATEGORIES, 'id');
         .modal-overlay {
             display: none; position: fixed; inset: 0;
             background: rgba(0,0,0,0.55); z-index: 1000;
-            align-items: center; justify-content: center;
+            align-items: flex-start; justify-content: center;
             backdrop-filter: blur(3px);
+            overflow-y: auto;
+            padding: 40px 20px;
         }
         .modal-overlay.active { display: flex; }
         .modal-box {
@@ -150,6 +152,8 @@ $knownCatIds = array_column($CATEGORIES, 'id');
             padding: 30px 35px; width: 460px; max-width: 95vw;
             box-shadow: 0 20px 60px rgba(0,0,0,0.25);
             animation: modalIn 0.22s ease; position: relative;
+            max-height: 85vh;
+            overflow-y: auto;
         }
         @keyframes modalIn {
             from { transform: translateY(-18px); opacity: 0; }
@@ -397,7 +401,7 @@ endforeach;
             <!-- Dynamic Edit Options Section -->
             <div style="margin-top: 15px; border-top: 1px dashed #e0d5c5; padding-top: 15px;">
                 <h4 style="margin: 0 0 10px; color: var(--accent-orange); font-size: 0.9rem;">⚙️ Customize Options / Add-Ons (Optional)</h4>
-                <div id="editOptionsContainer" style="max-height: 160px; overflow-y: auto; padding-right: 5px;">
+                <div id="editOptionsContainer" style="padding-right: 5px;">
                     <!-- Option rows will be loaded here dynamically -->
                 </div>
                 <button type="button" class="btn-action" style="background:#5E2A25; color:#fff; font-size:0.75rem; padding:6px 14px; margin-top: 5px; border-radius:6px;" onclick="addEditOptionRow()">
