@@ -1,26 +1,62 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit();
+require_once 'config/db.php';
+
+// ── Fetch date (default today) ──
+$date    = $_GET['date'] ?? date('Y-m-d');
+$isToday = ($date === date('Y-m-d'));
+
+// ── Stats (counts per status for that date) ──
+$sStat = $pdo->prepare(
+    "SELECT order_status, COUNT(*) AS cnt FROM orders WHERE DATE(created_at) = ? GROUP BY order_status"
+);
+$sStat->execute([$date]);
+$stats = ['Pending'=>0,'Preparing'=>0,'Completed'=>0];
+foreach ($sStat->fetchAll() as $r) {
+    if (isset($stats[$r['order_status']])) $stats[$r['order_status']] = (int)$r['cnt'];
 }
+$totalOrders = array_sum($stats);
+
+// ── Orders summary list ──
+$sOrd = $pdo->prepare(
+    "SELECT o.order_id, o.customer_name, o.order_type, o.table_number,
+            o.order_status, o.total_amount,
+            GROUP_CONCAT(
+                CONCAT(
+                    oi.quantity, 'x ', m.item_name,
+                    IF(oi.customization_notes IS NOT NULL AND oi.customization_notes != '', CONCAT(' (Remark: ', oi.customization_notes, ')'), '')
+                )
+                ORDER BY oi.order_item_id
+                SEPARATOR ', '
+            ) AS items_summary
+     FROM orders o
+     LEFT JOIN order_items oi ON o.order_id = oi.order_id
+     LEFT JOIN menu_items  m  ON oi.menu_item_id = m.menu_item_id
+     WHERE DATE(o.created_at) = ?
+     GROUP BY o.order_id
+     ORDER BY o.created_at DESC"
+);
+$sOrd->execute([$date]);
+$orders = $sOrd->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Dashboard — Restaurant</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="description" content="Staff dashboard — real-time overview of today's orders">
+    <title>Staff Dashboard — Restaurant ZZ</title>
+    <link rel="stylesheet" href="css/admin.css">
     <style>
-        /* ── Stat Grid (5 boxes) ── */
+        /* ── Stat Grid ── */
         .grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 16px;
             margin-bottom: 30px;
         }
-        .stat-box { text-align: center; padding: 24px 12px; }
+        .stat-box { text-align: center; padding: 24px 12px; cursor:pointer; transition:transform 0.15s,box-shadow 0.15s; }
+        .stat-box:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.10); }
         .stat-box h3 {
             margin: 0;
             color: var(--text-brown);
@@ -34,274 +70,172 @@ if (!isset($_SESSION['user_id'])) {
             font-weight: bold;
             color: var(--accent-orange);
         }
-        /* Colour-coded stat numbers */
         .stat-box.box-pending    p { color: #5E2A25; }
-        .stat-box.box-inprogress p { color: #a85530; }
-        .stat-box.box-ready      p { color: #c47a2b; }
+        .stat-box.box-preparing  p { color: #a85530; }
         .stat-box.box-completed  p { color: #2d7a4f; }
 
         /* ── Date Filter ── */
         .date-filter { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
 
-        /* ── Status cell container ── */
+        /* ── Status cells ── */
         .status-cell { display: flex; align-items: center; }
 
-        /* ════ STATUS BARS ════ */
-        /* Shared bar style */
         .status-bar {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px 6px 10px;
-            border-radius: 6px;
-            font-weight: 700;
-            font-size: 0.82rem;
-            text-decoration: none;
-            border-left: 4px solid;
-            transition: filter 0.2s, transform 0.15s;
-            cursor: pointer;
-            white-space: nowrap;
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 14px 6px 10px; border-radius: 6px;
+            font-weight: 700; font-size: 0.82rem;
+            text-decoration: none; border-left: 4px solid;
+            transition: filter 0.2s, transform 0.15s; cursor: pointer; white-space: nowrap;
         }
         .status-bar:hover { filter: brightness(0.93); transform: translateX(2px); }
 
-        /* Pending bar */
-        .status-bar.bar-pending {
-            background: rgba(94, 42, 37, 0.09);
-            color: #5E2A25;
-            border-color: #5E2A25;
-        }
-        /* Pulse dot for pending */
-        .status-bar.bar-pending::before {
-            content: '';
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: #5E2A25;
-            animation: pulseDot 1.4s ease-in-out infinite;
-            flex-shrink: 0;
-        }
+        .status-bar.bar-pending    { background:rgba(94,42,37,0.09);  color:#5E2A25; border-color:#5E2A25; }
+        .status-bar.bar-preparing  { background:rgba(168,85,48,0.09); color:#a85530; border-color:#a85530; }
 
-        /* In Progress bar */
-        .status-bar.bar-inprogress {
-            background: rgba(168, 85, 48, 0.09);
-            color: #a85530;
-            border-color: #a85530;
+        .status-bar.bar-pending::before,
+        .status-bar.bar-preparing::before {
+            content:''; width:8px; height:8px; border-radius:50%;
+            background:currentColor; flex-shrink:0;
+            animation:pulseDot 1.2s ease-in-out infinite;
         }
-        /* Spinning cog for in-progress */
-        .status-bar.bar-inprogress::before {
-            content: '';
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: #a85530;
-            animation: pulseDot 0.9s ease-in-out infinite;
-            flex-shrink: 0;
-        }
-
         @keyframes pulseDot {
-            0%, 100% { opacity: 1; transform: scale(1);    }
-            50%       { opacity: 0.4; transform: scale(1.5); }
+            0%,100% { opacity:1; transform:scale(1); }
+            50%      { opacity:0.4; transform:scale(1.5); }
         }
 
-        /* Ready → action button */
         .btn-ready {
-            background: linear-gradient(135deg, #e67e22, var(--accent-orange));
-            color: #fff;
-            border: none;
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'Poppins', sans-serif;
-            box-shadow: 0 2px 8px rgba(168,85,48,0.35);
-            transition: transform 0.15s, box-shadow 0.15s;
-            white-space: nowrap;
+            background: linear-gradient(135deg,#e67e22,var(--accent-orange));
+            color:#fff; border:none; padding:6px 15px; border-radius:20px;
+            font-size:0.82rem; font-weight:600; cursor:pointer;
+            font-family:'Poppins',sans-serif;
+            box-shadow:0 2px 8px rgba(168,85,48,0.35);
+            transition:transform 0.15s,box-shadow 0.15s;
         }
-        .btn-ready:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 14px rgba(168,85,48,0.5);
-            opacity: 1;
-        }
+        .btn-ready:hover { transform:translateY(-1px); box-shadow:0 4px 14px rgba(168,85,48,0.5); opacity:1; }
 
-        /* Completed → plain text */
-        .text-completed { color: #2d7a4f; font-weight: 700; font-size: 0.88rem; }
-
-        /* Empty row */
+        .text-completed { color:#2d7a4f; font-weight:700; font-size:0.88rem; }
+        .text-pending   { color:#856404; font-weight:700; font-size:0.88rem; }
         .no-orders { text-align:center; padding:40px; color:#aaa; }
+
+        /* type badges */
+        .badge-walkin { background:var(--bg-cream); color:var(--text-brown); font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:6px; }
+        .badge-online { background:#e8f0ff; color:#1a4e9e; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:6px; }
     </style>
 </head>
-<body class="staff-portal">
+<body>
 
     <div class="sidebar">
         <h2>Restaurant</h2>
         <a href="staff_dashboard.php" style="background-color: var(--accent-orange); color: white;">Dashboard</a>
         <a href="manage_orders.php">Manage Orders</a>
         <a href="manage_menu.php">Manage Menu</a>
-        <a href="login.php" style="margin-top: 50px; color: var(--bg-cream);">Logout</a>
+        <a href="#" onclick="logoutStaff(); return false;" class="sidebar-logout">Logout</a>
     </div>
 
     <div class="main-content">
         <h1 style="border-bottom: 2px solid var(--text-brown); padding-bottom: 10px;">Staff Dashboard</h1>
 
-        <!-- Date Filter -->
+        <!-- ── Date Filter ── -->
         <div class="date-filter">
             <label for="dashboardDate"><strong>Viewing Orders For:</strong></label>
-            <input type="date" id="dashboardDate" style="width: auto; margin: 0;" value="<?php echo date('Y-m-d'); ?>"
-                   onchange="loadDashboard(this.value)">
+            <input type="date" id="dashboardDate"
+                   value="<?= htmlspecialchars($date) ?>"
+                   style="width: auto; margin: 0;"
+                   onchange="window.location.href='staff_dashboard.php?date='+this.value">
         </div>
 
-        <!-- ── 5 Stat Boxes ── -->
-        <div class="grid">
-            <div class="card stat-box">
+        <!-- ── Stat Boxes ── -->
+        <div class="grid" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="card stat-box" onclick="window.location.href='manage_orders.php?date=<?= $date ?>'">
                 <h3>Total Orders</h3>
-                <p id="statTotal">—</p>
+                <p><?= $totalOrders ?></p>
             </div>
-            <div class="card stat-box box-pending">
+            <div class="card stat-box box-pending" onclick="window.location.href='manage_orders.php?date=<?= $date ?>&status=Pending'">
                 <h3>⚠ Pending</h3>
-                <p id="statPending">—</p>
+                <p><?= $stats['Pending'] ?></p>
             </div>
-            <div class="card stat-box box-inprogress">
-                <h3>🍳 In Progress</h3>
-                <p id="statInProgress">—</p>
+            <div class="card stat-box box-preparing" onclick="window.location.href='manage_orders.php?date=<?= $date ?>&status=Preparing'">
+                <h3>🍳 Preparing</h3>
+                <p><?= $stats['Preparing'] ?></p>
             </div>
-            <div class="card stat-box box-ready">
-                <h3>✅ Ready</h3>
-                <p id="statReady">—</p>
-            </div>
-            <div class="card stat-box box-completed">
+            <div class="card stat-box box-completed" onclick="window.location.href='manage_orders.php?date=<?= $date ?>&status=Completed'">
                 <h3>✔ Completed</h3>
-                <p id="statCompleted">—</p>
+                <p><?= $stats['Completed'] ?></p>
             </div>
         </div>
 
-        <!-- Orders Table -->
+        <!-- ── Orders Table ── -->
         <div class="card">
-            <h3 style="margin-top:0;" id="tableTitle">Today's Order Overview</h3>
+            <h3 style="margin-top:0;">
+                <?= $isToday ? "Today's Order Overview" : "Orders for ".date('d M Y', strtotime($date)) ?>
+                <span style="font-size:0.78rem;font-weight:400;color:#aaa;margin-left:10px;">
+                    Click a stat box above to filter by status in Manage Orders
+                </span>
+            </h3>
             <table>
                 <thead>
                     <tr>
                         <th>Order ID</th>
                         <th>Customer</th>
+                        <th>Type</th>
                         <th>Items Summary</th>
-                        <th>Overall Status</th>
+                        <th>Total (RM)</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
-                <tbody id="ordersBody">
-                    <!-- Dynamically rendered -->
+                <tbody>
+<?php if (empty($orders)): ?>
+                    <tr>
+                        <td colspan="6" class="no-orders">
+                            📋 No orders recorded for
+                            <strong><?= htmlspecialchars(date('d M Y', strtotime($date))) ?></strong>.
+                        </td>
+                    </tr>
+<?php else: ?>
+<?php foreach ($orders as $o):
+    $oid    = $o['order_id'];
+    $status = $o['order_status'] ?? 'Pending';
+    $oType  = $o['order_type']   ?? 'Walk-In';
+    $typeClass  = (strtolower(str_replace(['-',' '],'',$oType))==='walkin') ? 'badge-walkin' : 'badge-online';
+    $tableInfo  = ($o['table_number'] ?? '') ? 'Table '.$o['table_number'] : 'Online';
+?>
+                    <tr id="dashRow_<?= $oid ?>">
+                        <td><strong>#<?= $oid ?></strong></td>
+                        <td>
+                            <?= htmlspecialchars($o['customer_name']) ?>
+                        </td>
+                        <td>
+                            <span class="<?= $typeClass ?>"><?= htmlspecialchars($oType) ?></span><br>
+                            <span style="font-size:0.78rem;color:#888;"><?= htmlspecialchars($tableInfo) ?></span>
+                        </td>
+                        <td style="font-size:0.84rem;color:#555;max-width:260px;">
+                            <?= htmlspecialchars($o['items_summary'] ?? '—') ?>
+                        </td>
+                        <td style="font-weight:700;color:var(--text-brown);">
+                            RM <?= number_format((float)$o['total_amount'], 2) ?>
+                        </td>
+                        <td>
+                            <div class="status-cell">
+<?php if ($status === 'Pending'): ?>
+                                <span class="status-bar bar-pending">Pending</span>
+<?php elseif ($status === 'Preparing'): ?>
+                                <span class="status-bar bar-preparing">Preparing</span>
+<?php else: ?>
+                                <span class="text-completed">✔ Completed</span>
+<?php endif; ?>
+                            </div>
+                        </td>
+                    </tr>
+<?php endforeach; ?>
+<?php endif; ?>
                 </tbody>
             </table>
         </div>
-    </div>
+    </div><!-- /.main-content -->
 
-    <script src="js/data.js"></script>
+    <script src="js/admin_validation.js?v=<?= time() ?>"></script>
     <script>
-        const TODAY = '<?php echo date("Y-m-d"); ?>';
-        let allOrders = {};
-
-        function loadDashboard(date) {
-            fetch('process/get_orders.php?date=' + date)
-                .then(response => response.json())
-                .then(orders => {
-                    const isToday = (date === TODAY);
-
-                    // Update title
-                    document.getElementById('tableTitle').innerText =
-                        isToday ? "Today's Order Overview" : "Orders for " + date;
-
-                    // ── Compute stats (each status in its own box) ──
-                    let total = orders.length, pending = 0, inprog = 0, ready = 0, completed = 0;
-                    orders.forEach(o => {
-                        const s = ROS.getOverallStatus(o.items);
-                        if      (s === 'pending')    pending++;
-                        else if (s === 'inprogress') inprog++;
-                        else if (s === 'ready')      ready++;
-                        else if (s === 'completed')  completed++;
-                    });
-
-                    document.getElementById('statTotal').innerText      = total;
-                    document.getElementById('statPending').innerText    = pending;
-                    document.getElementById('statInProgress').innerText = inprog;
-                    document.getElementById('statReady').innerText      = ready;
-                    document.getElementById('statCompleted').innerText  = completed;
-
-                    // ── Render rows ──
-                    const tbody = document.getElementById('ordersBody');
-                    if (orders.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="4" class="no-orders">No orders recorded for this date.</td></tr>';
-                        return;
-                    }
-
-                    tbody.innerHTML = orders.map(order => {
-                        const status  = ROS.getOverallStatus(order.items);
-                        const summary = order.items.map(i => {
-                            let itemStr = i.qty + 'x ' + i.name;
-                            if (i.remark) {
-                                itemStr += ` (${i.remark})`;
-                            }
-                            return itemStr;
-                        }).join(', ');
-
-                        let statusCell;
-
-                        if (isToday) {
-                            if (status === 'pending') {
-                                // Pending → bar indicator with link to manage_orders
-                                statusCell = `
-                                    <a href="manage_orders.php?date=${date}&order=${order.id}"
-                                       class="status-bar bar-pending"
-                                       title="Click to view and update this order">
-                                        Pending Items
-                                    </a>`;
-                            } else if (status === 'inprogress') {
-                                // In Progress → bar indicator with link to manage_orders
-                                statusCell = `
-                                    <a href="manage_orders.php?date=${date}&order=${order.id}"
-                                       class="status-bar bar-inprogress"
-                                       title="Click to view and update this order">
-                                        In Progress
-                                    </a>`;
-                            } else if (status === 'ready') {
-                                // Ready → action button
-                                statusCell = `
-                                    <button class="btn-ready" id="readyBtn_${order.id}"
-                                            onclick="markCompleted(${order.id}, '${date}')">
-                                        ✅ Ready — Mark Collected
-                                    </button>`;
-                            } else {
-                                // Completed → display only
-                                statusCell = `<span class="text-completed">✔ Completed</span>`;
-                            }
-                        } else {
-                            // Past dates — all display only
-                            statusCell = `<span class="text-completed">✔ Completed</span>`;
-                        }
-
-                        return `
-                            <tr id="dashRow_${order.id}">
-                                <td><strong>#${order.id}</strong></td>
-                                <td>${order.customer}</td>
-                                <td style="font-size:0.86rem; color:#555;">${summary}</td>
-                                <td><div class="status-cell">${statusCell}</div></td>
-                            </tr>`;
-                    }).join('');
-                });
-        }
-
-        function markCompleted(orderId, date) {
-            const formData = new FormData();
-            formData.append('order_id', orderId);
-            formData.append('order_status', 'Completed');
-
-            fetch('process/update_order.php', {
-                method: 'POST',
-                body: formData
-            }).then(() => {
-                loadDashboard(date);
-                ROS.showToast('✅ Order #' + orderId + ' marked as Completed!');
-            });
-        }
-
-        // ── Init ──
-        loadDashboard(document.getElementById('dashboardDate').value);
+        requireAuth();
     </script>
 </body>
 </html>

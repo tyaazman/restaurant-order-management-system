@@ -1,0 +1,137 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+:root {
+    --bg-cream: #E1D3A9; /* Creme */
+    --text-brown: #371E13; /* Coffee */
+    --accent-orange: #A85530; /* Deep Peach */
+    --danger-red: #5E2A25; /* Maroon */
+    --white: #FFFFFF;
+}
+
+body {
+    font-family: 'Poppins', Arial, sans-serif;
+    background-color: var(--bg-cream);
+    color: var(--text-brown);
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: var(--text-brown);
+    position: fixed;
+    padding-top: 20px;
+}
+
+.sidebar h2 {
+    color: var(--accent-orange);
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.sidebar a {
+    padding: 15px 25px;
+    text-decoration: none;
+    font-size: 16px;
+    color: var(--bg-cream);
+    display: block;
+    transition: 0.3s;
+}
+
+.sidebar a:hover {
+    background-color: var(--accent-orange);
+    color: var(--white);
+}
+
+.main-content {
+    margin-left: 250px;
+    padding: 30px;
+}
+
+/* Card & Container Styles */
+.card {
+    background-color: var(--white);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+.login-container {
+    max-width: 400px;
+    margin: 100px auto;
+}
+
+/* Buttons and Inputs */
+button {
+    background-color: var(--accent-orange);
+    color: var(--white);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    border-bottom: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: var(--text-brown);
+    color: var(--bg-cream);
+}
+
+/* ── Auth / Validation ── */
+input.input-error,
+select.input-error {
+    border-color: var(--danger-red) !important;
+    box-shadow: 0 0 0 3px rgba(94, 42, 37, 0.10);
+}
+
+/* ── Sidebar active link (programmatic) ── */
+.sidebar a.active {
+    background-color: var(--accent-orange);
+    color: var(--white);
+}
+
+/* ── Sidebar logout spacing ── */
+.sidebar a.sidebar-logout {
+    position: absolute;
+    bottom: 24px;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    color: var(--bg-cream);
+    opacity: 0.75;
+}
+.sidebar a.sidebar-logout:hover {
+    opacity: 1;
+    background-color: var(--danger-red);
+    color: var(--white);
+}
