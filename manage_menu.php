@@ -1,46 +1,152 @@
+<?php
+session_start();
+
+// ══════════════════════════════════════════════════════════
+//  AJAX ENDPOINT  (handles add / edit / delete via fetch)
+// ══════════════════════════════════════════════════════════
+if (isset($_GET['ajax'])) {
+    header('Content-Type: application/json');
+    require_once 'config/db.php';
+
+    $action = $_GET['ajax'];
+
+    /* ── ADD ── */
+    if ($action === 'add') {
+        $name     = trim($_POST['name']     ?? '');
+        $price    = floatval($_POST['price'] ?? 0);
+        $category = trim($_POST['category'] ?? '');
+
+        if (!$name)     { echo json_encode(['success'=>false,'error'=>'Food name is required.']);    exit; }
+        if ($price <= 0){ echo json_encode(['success'=>false,'error'=>'Enter a valid price (> 0).']); exit; }
+        if (!$category) { echo json_encode(['success'=>false,'error'=>'Please select a category.']); exit; }
+
+        $stmt = $pdo->prepare("INSERT INTO menu_items (item_name, price, category) VALUES (?, ?, ?)");
+        $stmt->execute([$name, $price, $category]);
+        $id = (int)$pdo->lastInsertId();
+
+        echo json_encode(['success'=>true, 'id'=>$id, 'name'=>$name, 'price'=>$price, 'category'=>$category]);
+        exit;
+    }
+
+    /* ── EDIT ── */
+    if ($action === 'edit') {
+        $id       = intval($_POST['id']      ?? 0);
+        $name     = trim($_POST['name']      ?? '');
+        $price    = floatval($_POST['price'] ?? 0);
+        $category = trim($_POST['category']  ?? '');
+
+        if (!$id || !$name || $price <= 0 || !$category) {
+            echo json_encode(['success'=>false,'error'=>'Invalid data. Check all fields.']); exit;
+        }
+
+        $stmt = $pdo->prepare("UPDATE menu_items SET item_name=?, price=?, category=? WHERE item_id=?");
+        $stmt->execute([$name, $price, $category, $id]);
+
+        echo json_encode(['success'=>true, 'name'=>$name, 'price'=>(float)$price, 'category'=>$category]);
+        exit;
+    }
+
+    /* ── DELETE ── */
+    if ($action === 'delete') {
+        $id = intval($_POST['id'] ?? 0);
+        if (!$id) { echo json_encode(['success'=>false,'error'=>'Invalid item ID.']); exit; }
+
+        $stmt = $pdo->prepare("DELETE FROM menu_items WHERE item_id=?");
+        $stmt->execute([$id]);
+
+        echo json_encode(['success'=>true]);
+        exit;
+    }
+
+    echo json_encode(['success'=>false,'error'=>'Unknown action.']);
+    exit;
+}
+
+// ══════════════════════════════════════════════════════════
+//  REGULAR PAGE LOAD
+// ══════════════════════════════════════════════════════════
+require_once 'config/db.php';
+
+/* Category display order (matches data.js CATEGORIES) */
+$CATEGORIES = [
+    ['id'=>'Sup ZZ',          'label'=>'Sup ZZ',          'section'=>'SIGNATURE'],
+    ['id'=>'Mee Rebus ZZ',    'label'=>'Mee Rebus ZZ',    'section'=>'SIGNATURE'],
+    ['id'=>'Ikan Siakap',     'label'=>'Ikan Siakap',     'section'=>'MENU IKAN'],
+    ['id'=>'Bakar-Bakar',     'label'=>'Bakar-Bakar',     'section'=>'MENU IKAN'],
+    ['id'=>'Masakan Panas',   'label'=>'Masakan Panas',   'section'=>'SARAPAN'],
+    ['id'=>'Roti Bakar',      'label'=>'Roti Bakar',      'section'=>'SARAPAN'],
+    ['id'=>'Set Nasi & Lauk', 'label'=>'Set Nasi & Lauk', 'section'=>'SET TENGAH HARI'],
+    ['id'=>'Roti Canai',      'label'=>'Roti Canai',      'section'=>'ROTI CANAI'],
+    ['id'=>'Nasi Goreng',     'label'=>'Nasi Goreng',     'section'=>'GORENG-GORENG'],
+    ['id'=>'Mee Goreng',      'label'=>'Mee Goreng',      'section'=>'GORENG-GORENG'],
+    ['id'=>'Sup Ala Thai',    'label'=>'Sup Ala Thai',    'section'=>'ALA-CARTE'],
+    ['id'=>'Tomyam',          'label'=>'Tomyam',          'section'=>'ALA-CARTE'],
+    ['id'=>'Mee Kuah',        'label'=>'Mee Kuah',        'section'=>'ALA-CARTE'],
+    ['id'=>'Sayur',           'label'=>'Sayur',           'section'=>'ALA-CARTE'],
+    ['id'=>'Aneka Lauk Thai', 'label'=>'Aneka Lauk Thai', 'section'=>'ALA-CARTE'],
+    ['id'=>'Goreng Tepung',   'label'=>'Goreng Tepung',   'section'=>'ALA-CARTE'],
+    ['id'=>'Fried & Grill',   'label'=>'Fried & Grill',   'section'=>'WESTERN'],
+    ['id'=>'Spaghetti',       'label'=>'Spaghetti',       'section'=>'WESTERN'],
+    ['id'=>'Burger',          'label'=>'Burger',          'section'=>'WESTERN'],
+    ['id'=>'Sides',           'label'=>'Sides',           'section'=>'WESTERN'],
+    ['id'=>'Non-Coffee',      'label'=>'Non-Coffee',      'section'=>'MINUMAN'],
+    ['id'=>'Coffee',          'label'=>'Coffee',          'section'=>'MINUMAN'],
+    ['id'=>'Jus',             'label'=>'Jus',             'section'=>'MINUMAN'],
+    ['id'=>'Cold Dessert',    'label'=>'Cold Dessert',    'section'=>'MINUMAN'],
+    ['id'=>'Lain-Lain',       'label'=>'Lain-Lain',       'section'=>'LAIN-LAIN'],
+];
+
+/* Fetch all menu items */
+try {
+    $stmt      = $pdo->query("SELECT item_id, item_name, price, category FROM menu_items ORDER BY item_id ASC");
+    $menuItems = $stmt->fetchAll();
+} catch (PDOException $e) {
+    $menuItems = [];
+}
+
+/* Group by category */
+$grouped = [];
+foreach ($menuItems as $item) {
+    $grouped[$item['category']][] = $item;
+}
+$totalItems = count($menuItems);
+
+/* All unique categories found in DB (for "Other" items not in CATEGORIES list) */
+$knownCatIds = array_column($CATEGORIES, 'id');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Menu — Restaurant</title>
+    <meta name="description" content="Manage restaurant food menu — add, edit and delete items">
+    <title>Manage Menu — Restaurant ZZ</title>
     <link rel="stylesheet" href="css/admin.css">
     <style>
         /* ── Modal ── */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.55);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.55); z-index: 1000;
+            align-items: center; justify-content: center;
             backdrop-filter: blur(3px);
         }
         .modal-overlay.active { display: flex; }
         .modal-box {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 30px 35px;
-            width: 460px;
-            max-width: 95vw;
+            background: var(--white); border-radius: 12px;
+            padding: 30px 35px; width: 460px; max-width: 95vw;
             box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-            animation: modalIn 0.25s ease;
-            position: relative;
+            animation: modalIn 0.22s ease; position: relative;
         }
         @keyframes modalIn {
             from { transform: translateY(-18px); opacity: 0; }
             to   { transform: translateY(0);     opacity: 1; }
         }
         .modal-box h3 {
-            margin: 0 0 18px 0;
-            color: var(--text-brown);
-            font-size: 1.1rem;
-            border-bottom: 2px solid var(--bg-cream);
-            padding-bottom: 12px;
+            margin: 0 0 18px; color: var(--text-brown);
+            font-size: 1.1rem; border-bottom: 2px solid var(--bg-cream); padding-bottom: 12px;
         }
         .modal-close {
-            position: absolute; top:16px; right:18px;
+            position: absolute; top: 16px; right: 18px;
             background: none; border: none;
             font-size: 1.4rem; color: #bbb; cursor: pointer; padding: 0; line-height: 1;
         }
@@ -55,44 +161,43 @@
 
         /* ── Category section headers ── */
         .cat-section-header {
-            background: var(--bg-cream);
-            padding: 6px 16px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--accent-orange);
+            background: var(--bg-cream); padding: 6px 16px;
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; color: var(--accent-orange);
             border-top: 2px solid var(--text-brown);
         }
         .cat-section-header:first-child { border-top: none; }
-
-        .cat-group-header {
-            background: #f5f0eb;
-        }
+        .cat-group-header { background: #f5f0eb; }
         .cat-group-header td {
-            padding: 8px 12px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            color: var(--text-brown);
-            border-bottom: 1px solid #e0d5c5;
-            letter-spacing: 0.03em;
+            padding: 8px 12px; font-weight: 700; font-size: 0.85rem;
+            color: var(--text-brown); border-bottom: 1px solid #e0d5c5; letter-spacing: 0.03em;
         }
         .cat-group-icon { margin-right: 6px; }
 
         /* Action buttons */
         .btn-edit   { padding: 4px 11px; background-color: var(--text-brown); font-size: 0.8rem; }
-        .btn-delete { padding: 4px 11px; background-color: var(--danger-red); font-size: 0.8rem; margin-left:4px; }
+        .btn-delete { padding: 4px 11px; background-color: var(--danger-red); font-size: 0.8rem; margin-left: 4px; }
 
         /* Filter bar */
-        .filter-bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
-        .filter-bar select { width:auto; margin:0; }
-        .filter-bar input  { width:auto; min-width:180px; margin:0; }
+        .filter-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .filter-bar select { width: auto; margin: 0; }
+        .filter-bar input  { width: auto; min-width: 180px; margin: 0; }
 
         /* Item count badge */
-        .item-count { font-size:0.82rem; color:var(--accent-orange); font-weight:600; margin-left:8px; }
+        .item-count { font-size: 0.82rem; color: var(--accent-orange); font-weight: 600; margin-left: 8px; }
 
         /* Price cell */
-        td.price-cell { font-weight:600; color:var(--text-brown); }
+        td.price-cell { font-weight: 600; color: var(--text-brown); }
+
+        /* Field error message */
+        .field-err { color: var(--danger-red); font-size: 0.77rem; font-weight: 600; display: block; margin-top: 2px; }
+
+        /* Fade-in row */
+        @keyframes rowIn {
+            from { opacity: 0; transform: translateX(-8px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        .row-new { animation: rowIn 0.3s ease; }
     </style>
 </head>
 <body>
@@ -102,31 +207,41 @@
         <a href="staff_dashboard.php">Dashboard</a>
         <a href="manage_orders.php">Manage Orders</a>
         <a href="manage_menu.php" style="background-color: var(--accent-orange); color: white;">Manage Menu</a>
-        <a href="login.php" style="margin-top: 50px; color: var(--bg-cream);">Logout</a>
+        <a href="#" onclick="logoutStaff(); return false;" class="sidebar-logout">Logout</a>
     </div>
 
     <div class="main-content">
-        <h1>Manage Menu</h1>
+        <h1 style="border-bottom: 2px solid var(--text-brown); padding-bottom: 10px;">
+            Manage Menu <span class="item-count" id="itemCount">(<?= $totalItems ?> items)</span>
+        </h1>
 
         <!-- ── Add New Item ── -->
         <div class="card" style="margin-bottom: 26px;">
             <h3 style="margin-top: 0;">➕ Add New Food Item</h3>
+            <div id="addError" style="display:none; color:var(--danger-red); font-size:0.83rem;
+                 font-weight:600; background:#fde8e8; border-left:4px solid var(--danger-red);
+                 border-radius:6px; padding:8px 12px; margin-bottom:12px;"></div>
             <form id="addForm" onsubmit="return false;">
-                <div style="flex-grow: 2;">
+                <div style="flex-grow:2;">
                     <label for="food_name">Food Name</label>
-                    <input type="text" id="food_name" placeholder="e.g. Roti Sardine">
+                    <input type="text" id="food_name" placeholder="e.g. Roti Sardine" autocomplete="off">
                 </div>
                 <div>
                     <label for="price">Price (RM)</label>
-                    <input type="text" id="price" placeholder="e.g. 6.00" style="min-width:100px;">
+                    <input type="number" id="price" placeholder="e.g. 6.00" step="0.10" min="0.10" style="min-width:100px;">
                 </div>
                 <div>
                     <label for="category">Category</label>
                     <select id="category" style="margin:8px 0 15px;">
-                        <!-- Populated by JS -->
+                        <option value="">-- Select Category --</option>
+                        <?php foreach ($CATEGORIES as $cat): ?>
+                        <option value="<?= htmlspecialchars($cat['id']) ?>"><?= htmlspecialchars($cat['section'].' › '.$cat['label']) ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
-                <button type="button" style="margin-bottom:15px;" onclick="addItem()">Add to Menu</button>
+                <button type="button" id="addBtn" style="margin-bottom:15px;" onclick="addItem()">
+                    Add to Menu
+                </button>
             </form>
         </div>
 
@@ -134,11 +249,18 @@
         <div class="card" style="padding: 14px 20px; margin-bottom: 6px;">
             <div class="filter-bar">
                 <strong>Filter:</strong>
-                <select id="catFilter" onchange="renderMenu()">
+                <select id="catFilter" onchange="applyFilter()">
                     <option value="">All Categories</option>
+                    <?php foreach ($CATEGORIES as $cat): ?>
+                        <?php if (!empty($grouped[$cat['id']])): ?>
+                        <option value="<?= htmlspecialchars($cat['id']) ?>">
+                            <?= htmlspecialchars($cat['section'].' › '.$cat['label']) ?>
+                        </option>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
                 </select>
-                <input type="text" id="searchFilter" placeholder="🔍 Search item name…" oninput="renderMenu()">
-                <span class="item-count" id="itemCount"></span>
+                <input type="text" id="searchFilter" placeholder="🔍 Search item name…" oninput="applyFilter()">
+                <span class="item-count" id="filterCount"></span>
             </div>
         </div>
 
@@ -147,19 +269,60 @@
             <table id="menuTable" style="margin-top:0;">
                 <thead>
                     <tr>
-                        <th style="width:50px;">ID</th>
+                        <th style="width:55px;">ID</th>
                         <th>Food Name</th>
-                        <th style="width:130px;">Category</th>
+                        <th style="width:145px;">Category</th>
                         <th style="width:120px;">Price (RM)</th>
-                        <th style="width:160px;">Actions</th>
+                        <th style="width:165px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="menuBody">
-                    <!-- Rendered by JS -->
+<?php
+$lastSection = null;
+foreach ($CATEGORIES as $cat):
+    $items = $grouped[$cat['id']] ?? [];
+    if (empty($items)) continue;
+
+    /* Section divider */
+    if ($cat['section'] !== $lastSection):
+        echo '<tr class="cat-section-header" data-section="'.htmlspecialchars($cat['section']).'"><td colspan="5">'.htmlspecialchars($cat['section']).'</td></tr>';
+        $lastSection = $cat['section'];
+    endif;
+
+    /* Category sub-header */
+    echo '<tr class="cat-group-header" id="cathead-'.htmlspecialchars($cat['id']).'" data-category="'.htmlspecialchars($cat['id']).'">';
+    echo '<td colspan="5"><span class="cat-group-icon">▸</span>'.htmlspecialchars($cat['label'])
+       . ' <span style="font-weight:400;font-size:0.78rem;color:#888;margin-left:8px;">('. count($items) .' items)</span></td>';
+    echo '</tr>';
+
+    /* Item rows */
+    foreach ($items as $item):
+        $catEsc  = htmlspecialchars($item['category']);
+        $nameEsc = htmlspecialchars($item['item_name']);
+        $nameJS  = json_encode($item['item_name']);
+        $catJS   = json_encode($item['category']);
+        $price   = number_format((float)$item['price'], 2);
+        $id      = (int)$item['item_id'];
+        echo "<tr id=\"row_{$id}\" class=\"item-row\" data-id=\"{$id}\" data-category=\"{$catEsc}\" data-name=\"".strtolower($item['item_name'])."\">";
+        echo "<td style=\"color:#aaa;font-size:0.8rem;\">#{$id}</td>";
+        echo "<td>{$nameEsc}</td>";
+        echo "<td style=\"font-size:0.8rem;color:#888;\">{$catEsc}</td>";
+        echo "<td class=\"price-cell\" id=\"price_{$id}\">RM {$price}</td>";
+        echo "<td>";
+        echo "<button class=\"btn-edit\" onclick=\"openEditModal({$id},{$nameJS},{$item['price']},{$catJS})\">✏️ Edit</button>";
+        echo "<button class=\"btn-delete\" onclick=\"deleteItem({$id},{$nameJS})\">🗑</button>";
+        echo "</td>";
+        echo "</tr>";
+    endforeach;
+endforeach;
+?>
                 </tbody>
             </table>
-        </div>
-    </div>
+            <p id="noItems" style="display:none; text-align:center; padding:40px; color:#aaa;">
+                No items match your filter.
+            </p>
+        </div><!-- /.card -->
+    </div><!-- /.main-content -->
 
     <!-- ════ EDIT MODAL ════ -->
     <div class="modal-overlay" id="editModal" onclick="closeModalOnOverlay(event)">
@@ -167,147 +330,217 @@
             <button class="modal-close" onclick="closeEditModal()">✕</button>
             <h3>✏️ Edit Food Item <span id="modalItemId" style="color:var(--accent-orange);"></span></h3>
 
+            <div id="editError" style="display:none; color:var(--danger-red); font-size:0.83rem;
+                 font-weight:600; background:#fde8e8; border-left:4px solid var(--danger-red);
+                 border-radius:6px; padding:8px 12px; margin-bottom:12px;"></div>
+
             <input type="hidden" id="modal_edit_id">
 
             <label for="modal_food_name">Food Name</label>
             <input type="text" id="modal_food_name" placeholder="e.g. Roti Kosong">
 
             <label for="modal_price">Price (RM)</label>
-            <input type="text" id="modal_price" placeholder="e.g. 1.50">
+            <input type="number" id="modal_price" placeholder="e.g. 1.50" step="0.10" min="0.10">
 
             <label for="modal_category">Category</label>
             <select id="modal_category">
-                <!-- Populated by JS -->
+                <option value="">-- Select Category --</option>
+                <?php foreach ($CATEGORIES as $cat): ?>
+                <option value="<?= htmlspecialchars($cat['id']) ?>"><?= htmlspecialchars($cat['section'].' › '.$cat['label']) ?></option>
+                <?php endforeach; ?>
             </select>
 
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
-                <button onclick="saveEdit()">💾 Save Changes</button>
+                <button id="saveBtn" onclick="saveEdit()">💾 Save Changes</button>
             </div>
         </div>
     </div>
 
-    <script src="js/data.js"></script>
+    <script src="js/admin_validation.js"></script>
     <script>
-        let menu = ROS.getMenu();
+        requireAuth();
 
-        // ── Build category options ──────────────────
-        const catIds = ROS.CATEGORIES.map(c => c.id);
-        function buildCatOptions(selectId) {
-            const el = document.getElementById(selectId);
-            if (!el) return;
-            el.innerHTML = ROS.CATEGORIES.map(c =>
-                `<option value="${c.id}">${c.section} › ${c.label}</option>`
-            ).join('');
+        // ── Toast ──────────────────────────────────────────────
+        function showToast(msg, isErr) {
+            var t = document.getElementById('ros-toast');
+            if (!t) {
+                t = document.createElement('div');
+                t.id = 'ros-toast';
+                Object.assign(t.style, {
+                    position:'fixed', bottom:'28px', right:'28px',
+                    padding:'12px 22px', borderRadius:'8px',
+                    fontFamily:"'Poppins',sans-serif", fontWeight:'600', fontSize:'0.9rem',
+                    boxShadow:'0 4px 16px rgba(0,0,0,0.22)', zIndex:'9999', transition:'opacity 0.35s'
+                });
+                document.body.appendChild(t);
+            }
+            t.style.background = isErr ? '#5E2A25' : 'var(--text-brown)';
+            t.style.color = '#fff';
+            t.innerText = msg;
+            t.style.opacity = '1';
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => t.style.opacity='0', 2800);
         }
-        buildCatOptions('category');
-        buildCatOptions('modal_category');
 
-        // Populate filter dropdown
-        (function buildFilter() {
-            const f = document.getElementById('catFilter');
-            ROS.CATEGORIES.forEach(c => {
-                const o = document.createElement('option');
-                o.value = c.id; o.innerText = c.section + ' › ' + c.label;
-                f.appendChild(o);
+        // ── Categories list (for applyFilter section-header logic) ──
+        const CATEGORIES = <?= json_encode($CATEGORIES) ?>;
+
+        // ── Filter / Search ────────────────────────────────────
+        function applyFilter() {
+            var catF   = document.getElementById('catFilter').value;
+            var search = document.getElementById('searchFilter').value.toLowerCase().trim();
+            var rows   = document.querySelectorAll('#menuBody tr.item-row');
+            var visible = 0;
+
+            rows.forEach(function(row) {
+                var cat  = row.dataset.category || '';
+                var name = row.dataset.name     || '';
+                var ok   = (!catF || cat === catF) && (!search || name.includes(search));
+                row.style.display = ok ? '' : 'none';
+                if (ok) visible++;
             });
-        })();
 
-        // ── Render Table ────────────────────────────
-        function renderMenu() {
-            const catF    = document.getElementById('catFilter').value;
-            const search  = document.getElementById('searchFilter').value.toLowerCase();
+            // Show / hide category group headers
+            document.querySelectorAll('#menuBody tr.cat-group-header').forEach(function(hdr) {
+                var cat = hdr.dataset.category;
+                var has = Array.from(document.querySelectorAll('#menuBody tr.item-row[data-category="'+cat+'"]'))
+                              .some(r => r.style.display !== 'none');
+                hdr.style.display = has ? '' : 'none';
+            });
 
-            let filtered = menu;
-            if (catF)   filtered = filtered.filter(i => i.category === catF);
-            if (search) filtered = filtered.filter(i => i.name.toLowerCase().includes(search));
+            // Show / hide section headers
+            document.querySelectorAll('#menuBody tr.cat-section-header').forEach(function(sh) {
+                var sec = sh.dataset.section;
+                var has = Array.from(document.querySelectorAll('#menuBody tr.cat-group-header')).some(function(hdr){
+                    return hdr.dataset.section === sec && hdr.style.display !== 'none';
+                });
+                sh.style.display = has ? '' : 'none';
+            });
 
-            document.getElementById('itemCount').innerText =
-                '(' + filtered.length + ' item' + (filtered.length !== 1 ? 's' : '') + ')';
+            document.getElementById('noItems').style.display   = visible===0 ? 'block' : 'none';
+            document.getElementById('filterCount').innerText   = visible===0 ? '' : '('+visible+' shown)';
+            document.getElementById('itemCount').innerText     = '('+visible+' item'+(visible!==1?'s':'')+')';
+        }
 
-            const tbody = document.getElementById('menuBody');
+        // Rebuild section data attrs from cat-group-header
+        document.querySelectorAll('#menuBody tr.cat-group-header').forEach(function(hdr){
+            var catId = hdr.dataset.category;
+            var sec   = CATEGORIES.find(c=>c.id===catId);
+            if (sec) hdr.dataset.section = sec.section;
+        });
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#aaa;padding:30px;">No items match your filter.</td></tr>';
-                return;
+        // ── AJAX helpers ───────────────────────────────────────
+        function postAjax(action, data, onSuccess, onError) {
+            var fd = new FormData();
+            Object.keys(data).forEach(k => fd.append(k, data[k]));
+            fetch('manage_menu.php?ajax='+action, { method:'POST', body: fd })
+                .then(r => r.json())
+                .then(res => { if (res.success) onSuccess(res); else onError(res.error||'Unknown error'); })
+                .catch(() => onError('Network error. Please try again.'));
+        }
+
+        // ── ADD ────────────────────────────────────────────────
+        function addItem() {
+            var name     = document.getElementById('food_name').value.trim();
+            var price    = parseFloat(document.getElementById('price').value);
+            var category = document.getElementById('category').value;
+            var errEl    = document.getElementById('addError');
+
+            errEl.style.display = 'none';
+            document.getElementById('food_name').style.borderColor = '';
+            document.getElementById('price').style.borderColor = '';
+
+            // Client-side validation
+            var errors = [];
+            if (!name)          { errors.push('Food name is required.'); document.getElementById('food_name').style.borderColor = '#5E2A25'; }
+            if (!price||price<=0){ errors.push('Enter a valid price.');  document.getElementById('price').style.borderColor = '#5E2A25'; }
+            if (!category)       { errors.push('Select a category.'); }
+
+            if (errors.length) { errEl.innerText = '⚠ ' + errors[0]; errEl.style.display='block'; return; }
+
+            var btn = document.getElementById('addBtn');
+            btn.disabled = true; btn.innerText = 'Adding…';
+
+            postAjax('add', {name:name, price:price.toFixed(2), category:category}, function(res){
+                // Insert new row into the table
+                insertNewRow(res.id, res.name, res.price, res.category);
+
+                // Clear form
+                document.getElementById('food_name').value = '';
+                document.getElementById('price').value     = '';
+                showToast('✅ "'+res.name+'" added to menu!');
+                btn.disabled = false; btn.innerText = 'Add to Menu';
+
+                applyFilter();
+            }, function(err){
+                errEl.innerText = '⚠ '+err; errEl.style.display='block';
+                btn.disabled = false; btn.innerText = 'Add to Menu';
+            });
+        }
+
+        function insertNewRow(id, name, price, category) {
+            var tbody = document.getElementById('menuBody');
+            var catId = category;
+
+            // Find the category group header to insert after
+            var groupHdr = document.getElementById('cathead-'+catId);
+
+            // Build new row HTML
+            var nameJS = JSON.stringify(name);
+            var catJS  = JSON.stringify(category);
+            var priceF = parseFloat(price).toFixed(2);
+
+            var tr = document.createElement('tr');
+            tr.id = 'row_'+id;
+            tr.className = 'item-row row-new';
+            tr.dataset.id       = id;
+            tr.dataset.category = catId;
+            tr.dataset.name     = name.toLowerCase();
+            tr.innerHTML =
+                '<td style="color:#aaa;font-size:0.8rem;">#'+id+'</td>' +
+                '<td>'+escHtml(name)+'</td>' +
+                '<td style="font-size:0.8rem;color:#888;">'+escHtml(category)+'</td>' +
+                '<td class="price-cell" id="price_'+id+'">RM '+priceF+'</td>' +
+                '<td>' +
+                  '<button class="btn-edit" onclick="openEditModal('+id+','+nameJS+','+price+','+catJS+')">✏️ Edit</button>' +
+                  '<button class="btn-delete" onclick="deleteItem('+id+','+nameJS+')">🗑</button>' +
+                '</td>';
+
+            if (groupHdr) {
+                // Insert after the group header (and any existing items in that group)
+                var next = groupHdr.nextSibling;
+                while (next && next.classList && (next.classList.contains('item-row')) && next.dataset.category === catId) {
+                    next = next.nextSibling;
+                }
+                tbody.insertBefore(tr, next);
+
+                // Update item count in the group header
+                var span = groupHdr.querySelector('span');
+                if (span) {
+                    var count = tbody.querySelectorAll('tr.item-row[data-category="'+catId+'"]').length;
+                    span.innerText = '('+count+' items)';
+                }
+            } else {
+                // Category not in table yet — just append
+                tbody.appendChild(tr);
             }
 
-            // Group by category (maintaining CATEGORIES order)
-            const groups = {};
-            ROS.CATEGORIES.forEach(c => { groups[c.id] = []; });
-            filtered.forEach(item => {
-                if (!groups[item.category]) groups[item.category] = [];
-                groups[item.category].push(item);
-            });
-
-            let html = '';
-            let lastSection = null;
-
-            ROS.CATEGORIES.forEach(cat => {
-                const items = groups[cat.id];
-                if (!items || items.length === 0) return;
-
-                // Section header (e.g. "SIGNATURE")
-                if (cat.section !== lastSection) {
-                    html += `<tr><td colspan="5" class="cat-section-header">${cat.section}</td></tr>`;
-                    lastSection = cat.section;
-                }
-
-                // Category sub-header (e.g. "Sup ZZ")
-                html += `<tr class="cat-group-header">
-                    <td colspan="5">
-                        <span class="cat-group-icon">▸</span>${cat.label}
-                        <span style="font-weight:400; font-size:0.78rem; color:#888; margin-left:8px;">(${items.length} items)</span>
-                    </td>
-                </tr>`;
-
-                // Item rows
-                items.forEach(item => {
-                    html += `
-                    <tr id="row_${item.id}">
-                        <td style="color:#aaa; font-size:0.8rem;">#${item.id}</td>
-                        <td>${item.name}</td>
-                        <td style="font-size:0.8rem; color:#888;">${item.category}</td>
-                        <td class="price-cell">RM ${item.price.toFixed(2)}</td>
-                        <td>
-                            <button class="btn-edit"   onclick="openEditModal(${item.id})">✏️ Edit</button>
-                            <button class="btn-delete" onclick="deleteItem(${item.id})">🗑</button>
-                        </td>
-                    </tr>`;
-                });
-            });
-
-            tbody.innerHTML = html;
+            // Update total count
+            var total = tbody.querySelectorAll('tr.item-row').length;
+            document.getElementById('itemCount').innerText = '('+total+' items)';
         }
 
-        // ── Add ─────────────────────────────────────
-        function addItem() {
-            const name     = document.getElementById('food_name').value.trim();
-            const price    = parseFloat(document.getElementById('price').value);
-            const category = document.getElementById('category').value;
-
-            if (!name)            { ROS.showToast('⚠ Please enter a food name.'); return; }
-            if (isNaN(price) || price <= 0) { ROS.showToast('⚠ Please enter a valid price.'); return; }
-
-            const maxId = menu.reduce((m, i) => Math.max(m, i.id), 0);
-            menu.push({ id: maxId + 1, name, price, category });
-            ROS.saveMenu(menu);
-            renderMenu();
-            document.getElementById('food_name').value = '';
-            document.getElementById('price').value    = '';
-            ROS.showToast('✅ "' + name + '" added to menu!');
-        }
-
-        // ── Edit Modal ───────────────────────────────
-        function openEditModal(id) {
-            const item = menu.find(i => i.id === id);
-            if (!item) return;
-            document.getElementById('modal_food_name').value = item.name;
-            document.getElementById('modal_price').value     = item.price.toFixed(2);
-            document.getElementById('modal_category').value  = item.category || 'Lain-Lain';
-            document.getElementById('modal_edit_id').value   = id;
-            document.getElementById('modalItemId').innerText = '(ID: ' + id + ')';
+        // ── EDIT MODAL ─────────────────────────────────────────
+        function openEditModal(id, name, price, category) {
+            document.getElementById('modal_edit_id').value    = id;
+            document.getElementById('modal_food_name').value  = name;
+            document.getElementById('modal_price').value      = parseFloat(price).toFixed(2);
+            document.getElementById('modal_category').value   = category;
+            document.getElementById('modalItemId').innerText  = '(ID: '+id+')';
+            document.getElementById('editError').style.display = 'none';
             document.getElementById('editModal').classList.add('active');
+            document.getElementById('modal_food_name').focus();
         }
 
         function closeEditModal() {
@@ -319,40 +552,96 @@
         }
 
         function saveEdit() {
-            const id       = parseInt(document.getElementById('modal_edit_id').value);
-            const name     = document.getElementById('modal_food_name').value.trim();
-            const price    = parseFloat(document.getElementById('modal_price').value);
-            const category = document.getElementById('modal_category').value;
+            var id       = parseInt(document.getElementById('modal_edit_id').value);
+            var name     = document.getElementById('modal_food_name').value.trim();
+            var price    = parseFloat(document.getElementById('modal_price').value);
+            var category = document.getElementById('modal_category').value;
+            var errEl    = document.getElementById('editError');
 
-            if (!name)            { ROS.showToast('⚠ Please enter a food name.'); return; }
-            if (isNaN(price) || price <= 0) { ROS.showToast('⚠ Please enter a valid price.'); return; }
+            errEl.style.display = 'none';
 
-            const item = menu.find(i => i.id === id);
-            if (item) { item.name = name; item.price = price; item.category = category; }
-            ROS.saveMenu(menu);
-            renderMenu();
-            closeEditModal();
-            ROS.showToast('✅ "' + name + '" updated!');
+            var errors = [];
+            if (!name)          { errors.push('Food name is required.'); }
+            if (!price||price<=0){ errors.push('Enter a valid price.'); }
+            if (!category)       { errors.push('Select a category.'); }
+            if (errors.length)  { errEl.innerText = '⚠ '+errors[0]; errEl.style.display='block'; return; }
+
+            var btn = document.getElementById('saveBtn');
+            btn.disabled = true; btn.innerText = 'Saving…';
+
+            postAjax('edit', {id:id, name:name, price:price.toFixed(2), category:category}, function(res){
+                // Update row in table
+                var row = document.getElementById('row_'+id);
+                if (row) {
+                    var nameJS = JSON.stringify(res.name);
+                    var catJS  = JSON.stringify(res.category);
+                    var priceF = parseFloat(res.price).toFixed(2);
+                    row.cells[1].innerText = res.name;
+                    row.cells[2].innerText = res.category;
+                    row.cells[3].innerText = 'RM '+priceF;
+                    row.cells[3].id        = 'price_'+id;
+                    row.dataset.name       = res.name.toLowerCase();
+                    row.dataset.category   = res.category;
+                    row.cells[4].innerHTML =
+                        '<button class="btn-edit" onclick="openEditModal('+id+','+nameJS+','+res.price+','+catJS+')">✏️ Edit</button>' +
+                        '<button class="btn-delete" onclick="deleteItem('+id+','+nameJS+')">🗑</button>';
+                }
+                closeEditModal();
+                showToast('✅ "'+res.name+'" updated!');
+                btn.disabled = false; btn.innerText = '💾 Save Changes';
+                applyFilter();
+            }, function(err){
+                errEl.innerText = '⚠ '+err; errEl.style.display='block';
+                btn.disabled = false; btn.innerText = '💾 Save Changes';
+            });
         }
 
-        // ── Delete ───────────────────────────────────
-        function deleteItem(id) {
-            const item = menu.find(i => i.id === id);
-            if (!item) return;
-            if (!confirm('Delete "' + item.name + '" from the menu?')) return;
-            menu = menu.filter(i => i.id !== id);
-            ROS.saveMenu(menu);
-            renderMenu();
-            ROS.showToast('🗑 "' + item.name + '" removed.');
+        // ── DELETE ─────────────────────────────────────────────
+        function deleteItem(id, name) {
+            if (!confirm('Delete "'+name+'" from the menu?\nThis cannot be undone.')) return;
+
+            postAjax('delete', {id:id}, function(){
+                var row = document.getElementById('row_'+id);
+                if (row) {
+                    var cat = row.dataset.category;
+                    row.remove();
+
+                    // Update category item count
+                    var groupHdr = document.getElementById('cathead-'+cat);
+                    if (groupHdr) {
+                        var remaining = document.querySelectorAll('#menuBody tr.item-row[data-category="'+cat+'"]').length;
+                        if (remaining === 0) {
+                            groupHdr.style.display = 'none';
+                        } else {
+                            var sp = groupHdr.querySelector('span');
+                            if (sp) sp.innerText = '('+remaining+' items)';
+                        }
+                    }
+                }
+                var total = document.querySelectorAll('#menuBody tr.item-row').length;
+                document.getElementById('itemCount').innerText = '('+total+' item'+(total!==1?'s':'')+')';
+                showToast('🗑 "'+name+'" removed from menu.');
+                applyFilter();
+            }, function(err){
+                showToast('⚠ '+err, true);
+            });
         }
 
-        // Enter key on add form
-        document.getElementById('addForm').addEventListener('keydown', e => {
+        // ── Escape HTML helper ─────────────────────────────────
+        function escHtml(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ── Enter key in Add form ──────────────────────────────
+        document.getElementById('addForm').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') addItem();
         });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeEditModal();
+        });
 
-        // ── Init ──────────────────────────────────────
-        renderMenu();
+        // ── Init ──────────────────────────────────────────────
+        applyFilter();
     </script>
 </body>
 </html>

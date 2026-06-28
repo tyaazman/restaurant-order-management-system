@@ -106,3 +106,32 @@ th {
     background-color: var(--text-brown);
     color: var(--bg-cream);
 }
+
+/* ── Auth / Validation ── */
+input.input-error,
+select.input-error {
+    border-color: var(--danger-red) !important;
+    box-shadow: 0 0 0 3px rgba(94, 42, 37, 0.10);
+}
+
+/* ── Sidebar active link (programmatic) ── */
+.sidebar a.active {
+    background-color: var(--accent-orange);
+    color: var(--white);
+}
+
+/* ── Sidebar logout spacing ── */
+.sidebar a.sidebar-logout {
+    position: absolute;
+    bottom: 24px;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    color: var(--bg-cream);
+    opacity: 0.75;
+}
+.sidebar a.sidebar-logout:hover {
+    opacity: 1;
+    background-color: var(--danger-red);
+    color: var(--white);
+}

@@ -1,46 +1,64 @@
-document.addEventListener("DOMContentLoaded", function() {
-    
-    // 1. Staff Login Validation: username/password required
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
-            const user = document.getElementById('username').value.trim();
-            const pass = document.getElementById('password').value.trim();
-            if (!user || !pass) {
-                alert("Please enter both username and password.");
-                e.preventDefault(); 
-            }
-        });
+/**
+ * Restaurant Order System — Admin Validation & Auth Guard
+ * --------------------------------------------------------
+ * Provides:
+ *   requireAuth()   — session guard for all protected staff pages
+ *   logoutStaff()   — clears session and redirects to login.php immediately
+ *   Form validation — real-time, inline (no alert() calls)
+ */
+
+// ─────────────────────────────────────────────────────────────
+//  SESSION AUTH HELPERS
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Call at the top of every protected staff page's inline <script>.
+ * Redirects to login.php if ros_auth is not set in sessionStorage.
+ */
+function requireAuth() {
+    if (sessionStorage.getItem('ros_auth') !== '1') {
+        window.location.replace('login.php');
     }
+}
 
-    // 2. Manage Menu Validation: food name required & price must be a number
-    const menuForm = document.getElementById('menuForm');
-    if (menuForm) {
-        menuForm.addEventListener('submit', function(e) {
-            const foodName = document.getElementById('food_name').value.trim();
-            const price = document.getElementById('price').value.trim();
+/**
+ * Immediately clears session and redirects to login.php.
+ * No confirm dialog — direct logout.
+ */
+function logoutStaff() {
+    sessionStorage.removeItem('ros_auth');
+    window.location.href = 'login.php';
+}
 
-            if (!foodName) {
-                alert("Food name is required!");
-                e.preventDefault();
-                return;
-            }
-            if (!price || isNaN(price) || Number(price) <= 0) {
-                alert("Price must be a valid number!");
-                e.preventDefault();
-            }
-        });
-    }
+// ─────────────────────────────────────────────────────────────
+//  FORM VALIDATION HELPERS
+// ─────────────────────────────────────────────────────────────
 
-    // 3. Update Order Status Validation: order status must be selected
-    const statusForms = document.querySelectorAll('.statusForm');
-    statusForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const statusSelect = form.querySelector('.orderStatus').value;
-            if (statusSelect === "") {
-                alert("Please select an order status to update.");
+document.addEventListener('DOMContentLoaded', function () {
+
+    // Real-time: clear error highlight when user starts typing in menu fields
+    ['food_name', 'price', 'modal_food_name', 'modal_price'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', function () {
+                el.style.borderColor = '';
+                el.style.boxShadow   = '';
+            });
+        }
+    });
+
+    // Order status form validation (legacy .statusForm support)
+    var statusForms = document.querySelectorAll('.statusForm');
+    statusForms.forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            var statusSelect = form.querySelector('.orderStatus');
+            if (statusSelect && statusSelect.value === '') {
                 e.preventDefault();
+                if (typeof showToast === 'function') {
+                    showToast('⚠ Please select an order status to update.');
+                }
             }
         });
     });
+
 });
