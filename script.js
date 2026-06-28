@@ -118,21 +118,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 5. DYNAMIC MENU FETCHING & RENDERING
-    const pageCategoryMap = {
-        'index.html': 'Signature Sup',
-        'mee-rebus.html': 'Mee Rebus ZZ',
-        'sarapan.html': 'Sarapan',
-        'roti-canai.html': 'Roti Canai',
-        'set-tengah-hari.html': 'Set Tengah Hari',
-        'menu-ikan.html': 'Menu Ikan',
-        'ala-carte.html': 'Ala Carte Menu',
-        'western.html': 'Western Food',
-        'goreng-goreng.html': 'Goreng-Goreng',
-        'drinks.html': 'Drinks'
+    const activeLink = document.querySelector('.category-nav a.active');
+    const activeText = activeLink ? activeLink.innerText.trim() : 'Sup ZZ';
+
+    const categoryMap = {
+        'Sup ZZ': 'Signature Sup',
+        'Mee Rebus ZZ': 'Mee Rebus ZZ',
+        'Sarapan': 'Sarapan',
+        'Roti Canai': 'Roti Canai',
+        'Set Tengah Hari': 'Set Tengah Hari',
+        'Menu Ikan': 'Menu Ikan',
+        'Ala Carte Menu': 'Ala Carte Menu',
+        'Western Food': 'Western Food',
+        'Goreng-Goreng': 'Goreng-Goreng',
+        'Drinks': 'Drinks'
     };
 
-    const filename = window.location.pathname.split('/').pop() || 'index.html';
-    const category = pageCategoryMap[filename];
+    const category = categoryMap[activeText];
 
     if (category) {
         const gridLayout = document.querySelector('.grid-layout');
