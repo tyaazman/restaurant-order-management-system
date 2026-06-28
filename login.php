@@ -237,6 +237,9 @@
 
     <script src="js/admin_validation.js?v=<?= time() ?>"></script>
     <script>
+        // Clear auth state on login page load
+        sessionStorage.removeItem('ros_auth');
+
         // ── Login Handler ──
         function doLogin() {
             var user   = document.getElementById('username').value.trim();
@@ -252,6 +255,9 @@
                 if (!pass) passIn.classList.add('input-error');
                 return;
             }
+
+            // Set session storage auth so client-side guards allow page access
+            sessionStorage.setItem('ros_auth', '1');
 
             // Submit the form to PHP backend for session & database authentication!
             var form = document.getElementById('loginForm');
