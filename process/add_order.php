@@ -55,13 +55,15 @@ try {
             $price = (float) str_ireplace('RM ', '', $item_price_str);
 
             $item_id = 0;
+            $matched_base_name = '';
 
             // 1. First try matching the base name directly if present
             if ($base_name !== '') {
-                $stmtBase = $pdo->prepare("SELECT menu_item_id FROM menu_items WHERE item_name = ? LIMIT 1");
+                $stmtBase = $pdo->prepare("SELECT menu_item_id, item_name FROM menu_items WHERE item_name = ? LIMIT 1");
                 $stmtBase->execute([$base_name]);
                 if ($row = $stmtBase->fetch(PDO::FETCH_ASSOC)) {
                     $item_id = (int)$row['menu_item_id'];
+                    $matched_base_name = $row['item_name'];
                 }
             }
 
@@ -73,24 +75,45 @@ try {
                 $parts = explode('+', $clean_display);
                 $core_name = trim($parts[0]);
 
-                $stmtFuzzy = $pdo->prepare("SELECT menu_item_id FROM menu_items WHERE item_name = ? OR ? LIKE CONCAT('%', item_name, '%') LIMIT 1");
+                $stmtFuzzy = $pdo->prepare("SELECT menu_item_id, item_name FROM menu_items WHERE item_name = ? OR ? LIKE CONCAT('%', item_name, '%') LIMIT 1");
                 $stmtFuzzy->execute([$core_name, $core_name]);
                 if ($row = $stmtFuzzy->fetch(PDO::FETCH_ASSOC)) {
                     $item_id = (int)$row['menu_item_id'];
+                    $matched_base_name = $row['item_name'];
                 }
             }
 
             // 3. Absolute fallback to first item in database
             if ($item_id === 0) {
-                $fallback_stmt = $pdo->query("SELECT menu_item_id FROM menu_items LIMIT 1");
+                $fallback_stmt = $pdo->query("SELECT menu_item_id, item_name FROM menu_items LIMIT 1");
                 $fallback_row = $fallback_stmt->fetch(PDO::FETCH_ASSOC);
                 $item_id = $fallback_row ? (int)$fallback_row['menu_item_id'] : 1;
+                $matched_base_name = $fallback_row ? $fallback_row['item_name'] : '';
+            }
+
+            // Extract chosen options from display name by stripping the base name
+            $options_only = '';
+            if ($matched_base_name !== '') {
+                $options_only = trim(str_ireplace($matched_base_name, '', $item_name));
+                // Clean leading/trailing spaces, plus symbols, and parentheses
+                $options_only = trim(preg_replace('/^[+\s\(\)]+|[+\s\(\)]+$/', '', $options_only));
             }
 
             $customization_notes = trim($item['customization_notes'] ?? '');
-            if ($customization_notes === '') {
-                $customization_notes = null;
+            
+            $final_notes = '';
+            if ($options_only !== '') {
+                $final_notes = '[' . $options_only . ']';
             }
+            if ($customization_notes !== '') {
+                if ($final_notes !== '') {
+                    $final_notes .= ' ' . $customization_notes;
+                } else {
+                    $final_notes = $customization_notes;
+                }
+            }
+            
+            $customization_notes = ($final_notes !== '') ? $final_notes : null;
 
             // Insert the item into the order
             $insert_item_stmt = $pdo->prepare("INSERT INTO order_items (order_id, menu_item_id, quantity, unit_price, customization_notes) VALUES (?, ?, 1, ?, ?)");
