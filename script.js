@@ -1,6 +1,13 @@
 // Wait for the HTML content to fully load before running the script
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Parse table parameter from URL and store in localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const tableNo = urlParams.get('table');
+    if (tableNo) {
+        localStorage.setItem('tableNumber', tableNo);
+    }
+
     // 1. Initialize cart from localStorage or start with an empty array
     let cart = JSON.parse(localStorage.getItem('myCart')) || [];
 

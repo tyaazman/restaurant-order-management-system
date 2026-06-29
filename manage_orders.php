@@ -198,6 +198,7 @@ $STATUS_PHP = [
         <a href="staff_dashboard.php">Dashboard</a>
         <a href="manage_orders.php" style="background-color: var(--accent-orange); color: white;">Manage Orders</a>
         <a href="manage_menu.php">Manage Menu</a>
+        <a href="generate_qr.php">Customer QR Code</a>
         <a href="#" onclick="logoutStaff(); return false;" class="sidebar-logout">Logout</a>
     </div>
 

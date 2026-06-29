@@ -129,6 +129,7 @@ $orders = $sOrd->fetchAll();
         <a href="staff_dashboard.php" style="background-color: var(--accent-orange); color: white;">Dashboard</a>
         <a href="manage_orders.php">Manage Orders</a>
         <a href="manage_menu.php">Manage Menu</a>
+        <a href="generate_qr.php">Customer QR Code</a>
         <a href="#" onclick="logoutStaff(); return false;" class="sidebar-logout">Logout</a>
     </div>
 

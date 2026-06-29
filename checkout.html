@@ -90,6 +90,24 @@
                          <div class="form-row"><label>Email:</label><input type="email" name="email" required></div>`;
             }
             document.getElementById('dynamic-fields').innerHTML = html;
+
+            // Auto-fill Table Number if stored in localStorage
+            const savedTable = localStorage.getItem('tableNumber');
+            if (type === 'walkin-dinein' && savedTable) {
+                const tableInput = document.querySelector('input[name="table_no"]');
+                if (tableInput) {
+                    tableInput.value = savedTable;
+                }
+            }
+        }
+
+        // Auto-detect table number from localStorage to preset order type
+        const savedTable = localStorage.getItem('tableNumber');
+        if (savedTable) {
+            const selectEl = document.getElementById('order-type');
+            if (selectEl) {
+                selectEl.value = 'walkin-dinein';
+            }
         }
 
         // Initialize fields on load
@@ -101,6 +119,7 @@
             cartInput.value = JSON.stringify(cart);
             totalInput.value = total.toFixed(2);
             localStorage.removeItem('myCart');
+            localStorage.removeItem('tableNumber');
         };
     </script>
 </body>

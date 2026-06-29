@@ -225,6 +225,7 @@ $knownCatIds = array_column($CATEGORIES, 'id');
         <a href="staff_dashboard.php">Dashboard</a>
         <a href="manage_orders.php">Manage Orders</a>
         <a href="manage_menu.php" style="background-color: var(--accent-orange); color: white;">Manage Menu</a>
+        <a href="generate_qr.php">Customer QR Code</a>
         <a href="#" onclick="logoutStaff(); return false;" class="sidebar-logout">Logout</a>
     </div>
 

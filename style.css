@@ -338,3 +338,55 @@ body.staff-portal {
     background-color: var(--text-brown);
     color: var(--bg-cream);
 }
+
+/* =========================================================
+   MOBILE RESPONSIVENESS & TOUCH LAYOUT UPGRADES
+   ========================================================= */
+@media (max-width: 768px) {
+    /* Scale Hero banner on smaller viewports */
+    .hero-container {
+        height: 180px;
+    }
+    .hero-text h1 {
+        font-size: 2.2rem;
+    }
+    .hero-text p {
+        font-size: 1.1rem;
+    }
+    
+    /* Horizontal Swiping Category Navigation (app-like experience) */
+    .category-nav {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding: 10px;
+        gap: 8px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Hide scrollbar for Firefox */
+    }
+    .category-nav::-webkit-scrollbar {
+        display: none; /* Hide scrollbar for Safari/Chrome */
+    }
+    .category-nav a {
+        white-space: nowrap;
+        padding: 8px 16px;
+        font-size: 0.88rem;
+    }
+    
+    /* Grid system layout on mobile */
+    .grid-layout {
+        grid-template-columns: 1fr; /* Single column card view */
+        gap: 16px;
+        padding: 0 10px;
+    }
+    
+    /* Checkout & Cart Page widths */
+    .checkout-wrapper {
+        margin: 20px auto;
+        padding: 0 15px;
+    }
+    .checkout-wrapper h1 {
+        font-size: 1.6rem;
+    }
+}
