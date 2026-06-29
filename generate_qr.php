@@ -8,8 +8,48 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Automatically resolve server's local network IP on Windows XAMPP
+// Automatically resolve server's local network IP on Windows XAMPP, ignoring virtual adapters
 $local_ip = gethostbyname(gethostname());
+
+if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+    @exec('ipconfig', $output);
+    if (is_array($output)) {
+        $current_adapter = '';
+        $ips = [];
+        foreach ($output as $line) {
+            $line = trim($line);
+            if ($line === '') continue;
+            if (strpos($line, 'adapter') !== false && strpos($line, ':') !== false) {
+                $current_adapter = strtolower($line);
+            }
+            if (strpos($line, 'IPv4 Address') !== false || strpos($line, 'IP Address') !== false) {
+                $parts = explode(':', $line, 2);
+                $found_ip = trim($parts[1] ?? '');
+                if ($found_ip !== '' && $found_ip !== '127.0.0.1' && strpos($found_ip, '169.254.') === false) {
+                    $is_virtual = (
+                        strpos($current_adapter, 'vmware') !== false || 
+                        strpos($current_adapter, 'virtualbox') !== false || 
+                        strpos($current_adapter, 'host-only') !== false
+                    );
+                    if (!$is_virtual) {
+                        $local_ip = $found_ip;
+                        break;
+                    }
+                    $ips[$current_adapter] = $found_ip;
+                }
+            }
+        }
+        // Fallback to Wi-Fi if found
+        if ($local_ip === gethostbyname(gethostname()) && !empty($ips)) {
+            foreach ($ips as $adapter => $addr) {
+                if (strpos($adapter, 'wi-fi') !== false || strpos($adapter, 'wireless') !== false) {
+                    $local_ip = $addr;
+                    break;
+                }
+            }
+        }
+    }
+}
 
 // Default parameters
 $table_no = isset($_GET['table_no']) && $_GET['table_no'] !== '' ? intval($_GET['table_no']) : '';
