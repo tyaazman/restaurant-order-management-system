@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                             Object.keys(groups).forEach(groupName => {
                                 optionSectionHtml += `<h4 style="margin: 0 0 6px 0; font-size: 0.82rem; color: var(--header-maroon); font-weight: 700; font-family: sans-serif;">${escHtml(groupName)}</h4>`;
-                                const isRadio = groupName.toLowerCase().includes('pilihan') || groupName.toLowerCase().includes('choice') || groupName.toLowerCase().includes('option');
+                                const isRadio = !groupName.toLowerCase().includes('add') && !groupName.toLowerCase().includes('extra') && !groupName.toLowerCase().includes('topping');
                                 
                                 groups[groupName].forEach((opt, idx) => {
                                     const optId = `opt_${item.menu_item_id}_${opt.option_id}`;
