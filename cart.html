@@ -51,12 +51,6 @@
 
         <div id="total-price" class="total-section"></div>
 
-        <div style="margin-top: 20px; text-align: left;">
-            <label style="font-weight: bold; color: #8B4513; display: block; margin-bottom: 8px; font-size: 1.1rem;">Remark:</label>
-            <input type="text" id="order-remark" placeholder="e.g. No spicy, pack separately, extra gravy..." 
-                   style="width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; outline: none; transition: border-color 0.2s;">
-        </div>
-
         <div style="display: flex; gap: 10px; margin-top: 30px;">
             <a href="index.html" class="add-btn" style="flex:1; text-align:center; text-decoration:none;">Back to
                 Menu</a>
@@ -74,10 +68,8 @@
         // 2. Render items
         if (cart.length === 0) {
             listDiv.innerHTML = "<p style='text-align:center;'>Your cart is currently empty.</p>";
-            // Hide total, remark and checkout button if empty
+            // Hide total and checkout button if empty
             if (totalDiv) totalDiv.style.display = 'none';
-            const remarkDiv = document.getElementById('order-remark')?.parentElement;
-            if (remarkDiv) remarkDiv.style.display = 'none';
             const checkoutBtn = document.querySelector('button[onclick*="checkout.html"]');
             if (checkoutBtn) checkoutBtn.style.display = 'none';
         } else {
@@ -89,11 +81,16 @@
                 total += priceValue;
 
                 listDiv.innerHTML += `
-                    <div class="cart-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding: 15px 0;">
-                        <span style="font-weight: 600; color: #8B4513; flex: 1; padding-right: 15px; text-align: left;">${item.name}</span>
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <span style="font-weight: 600;">${item.price}</span>
-                            <button onclick="removeFromCart(${idx})" style="background: none; border: none; color: #5E2A25; font-size: 1.2rem; cursor: pointer; padding: 0 5px;" title="Remove item">✕</button>
+                    <div class="cart-item" style="display: flex; flex-direction: column; border-bottom: 1px solid #ddd; padding: 15px 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <span style="font-weight: 600; color: #8B4513; flex: 1; padding-right: 15px; text-align: left;">${item.name}</span>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span style="font-weight: 600;">${item.price}</span>
+                                <button onclick="removeFromCart(${idx})" style="background: none; border: none; color: #5E2A25; font-size: 1.2rem; cursor: pointer; padding: 0 5px;" title="Remove item">✕</button>
+                            </div>
+                        </div>
+                        <div style="margin-top: 8px; text-align: left; width: 100%;">
+                            <input type="text" class="item-remark" data-index="${idx}" placeholder="Add note (e.g. No spicy, extra gravy...)" value="${escHtml(item.customization_notes || '')}" style="width: 100%; padding: 6px 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 0.88rem; outline: none; transition: border-color 0.2s;" oninput="updateItemRemark(${idx}, this.value)">
                         </div>
                     </div>`;
             });
@@ -108,30 +105,15 @@
             window.location.reload();
         }
 
-        // 4. Load the remark from localStorage and sync it
-        const currentRemark = localStorage.getItem('cartRemark') || '';
-        const remarkInput = document.getElementById('order-remark');
-        if (remarkInput) {
-            remarkInput.value = currentRemark;
-            remarkInput.addEventListener('input', (e) => {
-                updateOrderRemark(e.target.value);
-            });
-        }
-
-        // Make sure all items have the customization notes on load
-        if (currentRemark && cart.length > 0) {
-            cart.forEach(item => {
-                item.customization_notes = currentRemark;
-            });
+        // 4. Update individual item remark handler
+        function updateItemRemark(index, val) {
+            cart[index].customization_notes = val;
             localStorage.setItem('myCart', JSON.stringify(cart));
         }
 
-        function updateOrderRemark(val) {
-            localStorage.setItem('cartRemark', val);
-            cart.forEach(item => {
-                item.customization_notes = val;
-            });
-            localStorage.setItem('myCart', JSON.stringify(cart));
+        function escHtml(s) {
+            if (s === null || s === undefined) return '';
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
     </script>
 </body>
