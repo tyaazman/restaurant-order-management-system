@@ -18,7 +18,8 @@ if (isset($_GET['ajax'])) {
             echo json_encode(['success'=>false,'error'=>'Invalid data.']); exit;
         }
 
-        $pdo->prepare("UPDATE orders SET order_status=? WHERE order_id=?")->execute([$status, $orderId]);
+        $userId = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : null;
+        $pdo->prepare("UPDATE orders SET order_status=?, user_id=? WHERE order_id=?")->execute([$status, $userId, $orderId]);
         
         if ($status === 'Completed') {
             $pdo->prepare("UPDATE order_items SET item_status = 'Completed' WHERE order_id = ?")->execute([$orderId]);

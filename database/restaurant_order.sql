@@ -53,7 +53,10 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `total_amount` decimal(10,2) NOT NULL,
   `order_status` varchar(20) DEFAULT 'Pending',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`order_id`)
+  `user_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`order_id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
