@@ -19,6 +19,12 @@ if (isset($_GET['ajax'])) {
         }
 
         $pdo->prepare("UPDATE orders SET order_status=? WHERE order_id=?")->execute([$status, $orderId]);
+        
+        if ($status === 'Completed') {
+            $pdo->prepare("UPDATE order_items SET item_status = 'Completed' WHERE order_id = ?")->execute([$orderId]);
+            $pdo->prepare("UPDATE payments SET payment_status = 'Completed' WHERE order_id = ?")->execute([$orderId]);
+        }
+
         echo json_encode(['success'=>true, 'status'=>$status, 'order_id'=>$orderId]);
         exit;
     }
