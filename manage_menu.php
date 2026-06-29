@@ -359,7 +359,7 @@ foreach ($CATEGORIES as $cat):
         echo "<td class=\"price-cell\" id=\"price_{$id}\">RM {$price}</td>";
         echo "<td>";
         echo "<button class=\"btn-edit\" onclick='openEditModal({$id},{$nameJS},{$item['price']},{$catJS},{$optionsEsc})'>✏️ Edit</button>";
-        echo "<button class=\"btn-delete\" onclick=\"deleteItem({$id},{$nameJS})\">🗑</button>";
+        echo "<button class=\"btn-delete\" onclick='deleteItem({$id},{$nameJS})'>🗑</button>";
         echo "</td>";
         echo "</tr>";
     endforeach;
@@ -607,7 +607,7 @@ endforeach;
                 '<td class="price-cell" id="price_'+id+'">RM '+priceF+'</td>' +
                 '<td>' +
                   '<button class="btn-edit" onclick=\'openEditModal('+id+','+nameJS+','+price+','+catJS+','+JSON.stringify(options)+')\'>✏️ Edit</button>' +
-                  '<button class="btn-delete" onclick="deleteItem('+id+','+nameJS+')">🗑</button>' +
+                  '<button class="btn-delete" onclick=\'deleteItem('+id+','+nameJS+')\'>🗑</button>' +
                 '</td>';
 
             if (groupHdr) {
@@ -749,7 +749,7 @@ endforeach;
                     var optsJS = JSON.stringify(res.options);
                     row.cells[4].innerHTML =
                         '<button class="btn-edit" onclick=\'openEditModal('+id+','+nameJS+','+res.price+','+catJS+','+optsJS+')\'>✏️ Edit</button>' +
-                        '<button class="btn-delete" onclick="deleteItem('+id+','+nameJS+')">🗑</button>';
+                        '<button class="btn-delete" onclick=\'deleteItem('+id+','+nameJS+')\'>🗑</button>';
                 }
                 closeEditModal();
                 showToast('✅ "'+res.name+'" updated!');
