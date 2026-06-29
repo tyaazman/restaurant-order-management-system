@@ -175,7 +175,9 @@ try {
                 $subject,
                 $message,
                 $smtp_config['email'],
-                $smtp_config['password']
+                $smtp_config['password'],
+                $smtp_config['host'] ?? 'ssl://smtp.gmail.com',
+                $smtp_config['port'] ?? 465
             );
         }
         
