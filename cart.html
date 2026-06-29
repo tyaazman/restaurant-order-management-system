@@ -74,26 +74,38 @@
         // 2. Render items
         if (cart.length === 0) {
             listDiv.innerHTML = "<p style='text-align:center;'>Your cart is currently empty.</p>";
-            // Hide the remark input if cart is empty
+            // Hide total, remark and checkout button if empty
+            if (totalDiv) totalDiv.style.display = 'none';
             const remarkDiv = document.getElementById('order-remark')?.parentElement;
-            if (remarkDiv) {
-                remarkDiv.style.display = 'none';
-            }
+            if (remarkDiv) remarkDiv.style.display = 'none';
+            const checkoutBtn = document.querySelector('button[onclick*="checkout.html"]');
+            if (checkoutBtn) checkoutBtn.style.display = 'none';
         } else {
             let total = 0;
-            cart.forEach((item) => {
+            listDiv.innerHTML = '';
+            cart.forEach((item, idx) => {
                 // Extract numeric value from string "RM 9.50" -> 9.50
                 const priceValue = parseFloat(item.price.replace('RM ', ''));
                 total += priceValue;
 
                 listDiv.innerHTML += `
-                    <div class="cart-item">
-                        <span style="font-weight: 600; color: #8B4513;">${item.name}</span>
-                        <span style="font-weight: 600;">${item.price}</span>
+                    <div class="cart-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding: 15px 0;">
+                        <span style="font-weight: 600; color: #8B4513; flex: 1; padding-right: 15px; text-align: left;">${item.name}</span>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span style="font-weight: 600;">${item.price}</span>
+                            <button onclick="removeFromCart(${idx})" style="background: none; border: none; color: #5E2A25; font-size: 1.2rem; cursor: pointer; padding: 0 5px;" title="Remove item">✕</button>
+                        </div>
                     </div>`;
             });
             // 3. Display Total
             totalDiv.innerHTML = `Total: RM ${total.toFixed(2)}`;
+        }
+
+        // 3b. Remove item handler
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('myCart', JSON.stringify(cart));
+            window.location.reload();
         }
 
         // 4. Load the remark from localStorage and sync it
