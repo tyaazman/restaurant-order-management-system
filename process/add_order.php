@@ -164,8 +164,24 @@ try {
                    "Reply-To: no-reply@suptulangzz.com\r\n" .
                    "X-Mailer: PHP/" . phpversion();
         
-        // 1. Send the email using PHP's native mail function
-        @mail($customer_email, $subject, $message, $headers);
+        // 1. Send the email (use custom secure SMTP if configured, fallback to native mail)
+        $smtp_config = @include __DIR__ . '/../config/smtp.php';
+        $sent_via_smtp = false;
+        
+        if (is_array($smtp_config) && isset($smtp_config['enabled']) && $smtp_config['enabled'] === true) {
+            require_once __DIR__ . '/smtp_helper.php';
+            $sent_via_smtp = send_smtp_email(
+                $customer_email,
+                $subject,
+                $message,
+                $smtp_config['email'],
+                $smtp_config['password']
+            );
+        }
+        
+        if (!$sent_via_smtp) {
+            @mail($customer_email, $subject, $message, $headers);
+        }
         
         // 2. Also log the email to a local text file for easy testing and assignment verification!
         $email_dir = __DIR__ . '/../assets/emails/';
