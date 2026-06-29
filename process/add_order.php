@@ -121,6 +121,62 @@ try {
         $payment_stmt->execute([$order_id, $payment_method, $total_amount]);
     }
 
+    // ── SEND EMAIL CONFIRMATION ──
+    if ($customer_email !== null && $customer_email !== '') {
+        $subject = "Order Confirmation - Order #{$order_id} - Sup Tulang ZZ";
+        
+        $item_details_text = "";
+        if (is_array($cart_items)) {
+            foreach ($cart_items as $item) {
+                $item_name = trim($item['name'] ?? '');
+                $item_price = trim($item['price'] ?? '0');
+                $notes = trim($item['customization_notes'] ?? '');
+                $item_details_text .= "- {$item_name} ({$item_price})";
+                if ($notes !== '') {
+                    $item_details_text .= " | Remark: {$notes}";
+                }
+                $item_details_text .= "\n";
+            }
+        }
+        
+        $table_text = $table_number ? "Table Number: {$table_number}\n" : "";
+        $address_text = $shipping_address ? "Shipping Address: {$shipping_address}\n" : "";
+        
+        $message = "Dear {$customer_name},\n\n";
+        $message .= "Thank you for dining with Sup Tulang ZZ! Your order has been successfully placed.\n\n";
+        $message .= "Order Details:\n";
+        $message .= "----------------------------------------\n";
+        $message .= "Order ID: #{$order_id}\n";
+        $message .= "Order Type: {$order_type}\n";
+        $message .= $table_text;
+        $message .= $address_text;
+        $message .= "Payment Method: {$payment_method}\n";
+        $message .= "Total Amount: RM " . number_format($total_amount, 2) . "\n";
+        $message .= "----------------------------------------\n\n";
+        $message .= "Items Ordered:\n";
+        $message .= $item_details_text;
+        $message .= "\n----------------------------------------\n";
+        $message .= "Our staff is preparing your food. Thank you and enjoy your meal!\n\n";
+        $message .= "Best regards,\n";
+        $message .= "Sup Tulang ZZ Management";
+        
+        $headers = "From: no-reply@suptulangzz.com\r\n" .
+                   "Reply-To: no-reply@suptulangzz.com\r\n" .
+                   "X-Mailer: PHP/" . phpversion();
+        
+        // 1. Send the email using PHP's native mail function
+        @mail($customer_email, $subject, $message, $headers);
+        
+        // 2. Also log the email to a local text file for easy testing and assignment verification!
+        $email_dir = __DIR__ . '/../assets/emails/';
+        if (!is_dir($email_dir)) {
+            mkdir($email_dir, 0777, true);
+        }
+        $email_filename = $email_dir . "order_" . $order_id . ".txt";
+        $log_content = "To: {$customer_email}\nSubject: {$subject}\nHeaders: {$headers}\n\n{$message}";
+        file_put_contents($email_filename, $log_content);
+    }
+
     // 5. Success! Redirect to confirmation page
     header('Location: ../confirmation.php?order_id=' . $order_id);
     exit();
