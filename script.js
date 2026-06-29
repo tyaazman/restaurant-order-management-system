@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            let finalPrice = optionPrice !== null ? optionPrice : basePrice;
+            let finalPrice = basePrice + (optionPrice !== null ? optionPrice : 0);
 
             // Handle checkbox add-ons
             const checkedChecks = card.querySelectorAll('.add-on-section input[type="checkbox"]:checked');
@@ -188,10 +188,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     const priceVal = parseFloat(opt.additional_price);
                                     
                                     let priceLabel = '';
-                                    if (inputType === 'radio') {
-                                        priceLabel = `(RM ${priceVal.toFixed(2)})`;
+                                    if (priceVal > 0) {
+                                        priceLabel = `(+RM ${priceVal.toFixed(2)})`;
                                     } else {
-                                        priceLabel = priceVal > 0 ? `(+RM ${priceVal.toFixed(2)})` : '';
+                                        priceLabel = `(RM 0.00)`;
                                     }
                                     
                                     optionSectionHtml += `
