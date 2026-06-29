@@ -3,11 +3,10 @@
  * Sends a real email using standard socket communication with Gmail SMTP.
  * Bypasses local server mail requirements and works on default XAMPP setups.
  */
-function send_smtp_email($to, $subject, $message, $smtp_user, $smtp_pass) {
-    $host = "ssl://smtp.gmail.com";
-    $port = 465;
+function send_smtp_email($to, $subject, $message, $smtp_user, $smtp_pass, $host = 'ssl://smtp.gmail.com', $port = 465) {
+    // If it's a local address, do not use SSL context encryption, establish standard TCP connection
+    $is_local = (strpos($host, '127.0.0.1') !== false || strpos($host, 'localhost') !== false);
     
-    // Disable SSL peer verification to ensure it runs on local offline servers easily
     $context = stream_context_create([
         'ssl' => [
             'verify_peer' => false,
@@ -16,7 +15,7 @@ function send_smtp_email($to, $subject, $message, $smtp_user, $smtp_pass) {
         ]
     ]);
     
-    $socket = @stream_socket_client("$host:$port", $errno, $errstr, 15, STREAM_CLIENT_CONNECT, $context);
+    $socket = @stream_socket_client("$host:$port", $errno, $errstr, 10, STREAM_CLIENT_CONNECT, $context);
     if (!$socket) {
         return false;
     }
@@ -30,20 +29,23 @@ function send_smtp_email($to, $subject, $message, $smtp_user, $smtp_pass) {
         $response = fgets($socket, 515);
     } while (substr($response, 3, 1) === '-');
     
-    // Request AUTH LOGIN
-    fwrite($socket, "AUTH LOGIN\r\n");
-    fgets($socket, 515);
-    
-    // Username (Base64)
-    fwrite($socket, base64_encode($smtp_user) . "\r\n");
-    fgets($socket, 515);
-    
-    // Password (Base64)
-    fwrite($socket, base64_encode($smtp_pass) . "\r\n");
-    $response = fgets($socket, 515);
-    if (strpos($response, '235') === false) {
-        fclose($socket);
-        return false; // Authentication failed
+    // Only perform authentication on non-local SMTP servers
+    if (!$is_local) {
+        // Request AUTH LOGIN
+        fwrite($socket, "AUTH LOGIN\r\n");
+        fgets($socket, 515);
+        
+        // Username (Base64)
+        fwrite($socket, base64_encode($smtp_user) . "\r\n");
+        fgets($socket, 515);
+        
+        // Password (Base64)
+        fwrite($socket, base64_encode($smtp_pass) . "\r\n");
+        $response = fgets($socket, 515);
+        if (strpos($response, '235') === false) {
+            fclose($socket);
+            return false; // Authentication failed
+        }
     }
     
     // Mail From

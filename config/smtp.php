@@ -1,12 +1,17 @@
 <?php
 return [
-    // Set to true to enable sending real emails to customer inboxes via Gmail SMTP.
-    'enabled' => false,
+    // Set to true to enable sending real emails to customer inboxes via SMTP.
+    'enabled' => true,
     
-    // Your Gmail address (e.g. 'myname@gmail.com')
-    'email' => 'YOUR_GMAIL_HERE@gmail.com',
+    // For local test catcher, use 127.0.0.1 and port 1025.
+    // If you want real emails later, change host to 'ssl://smtp.gmail.com', port to 465, and use your credentials.
+    'host' => '127.0.0.1',
+    'port' => 1025,
     
-    // Your Google App Password (16-character code generated in Google Account settings)
-    'password' => 'YOUR_GMAIL_APP_PASSWORD_HERE'
+    // Your Gmail address or mock sender address
+    'email' => 'test@suptulangzz.com',
+    
+    // Your Google App Password or empty for local testing
+    'password' => ''
 ];
 ?>
