@@ -50,20 +50,37 @@ try {
     if (is_array($cart_items)) {
         foreach ($cart_items as $item) {
             $item_name = trim($item['name'] ?? '');
+            $base_name = trim($item['base_name'] ?? '');
             $item_price_str = trim($item['price'] ?? '0');
             $price = (float) str_ireplace('RM ', '', $item_price_str);
 
-            // Clean the name for better searching
-            $clean_name = str_replace(array('(', ')'), '', $item_name);
+            $item_id = 0;
 
-            // Find the menu_item_id using PDO
-            $item_stmt = $pdo->prepare("SELECT menu_item_id FROM menu_items WHERE item_name = ? OR item_name LIKE ? LIMIT 1");
-            $item_stmt->execute([$clean_name, '%' . $clean_name . '%']);
-            $row = $item_stmt->fetch(PDO::FETCH_ASSOC);
-            
-            $item_id = $row ? (int)$row['menu_item_id'] : 0;
+            // 1. First try matching the base name directly if present
+            if ($base_name !== '') {
+                $stmtBase = $pdo->prepare("SELECT menu_item_id FROM menu_items WHERE item_name = ? LIMIT 1");
+                $stmtBase->execute([$base_name]);
+                if ($row = $stmtBase->fetch(PDO::FETCH_ASSOC)) {
+                    $item_id = (int)$row['menu_item_id'];
+                }
+            }
 
-            // Fallback if the item isn't perfectly matched in the database
+            // 2. Fallback to parsing display item_name
+            if ($item_id === 0 && $item_name !== '') {
+                // Remove parentheses
+                $clean_display = str_replace(array('(', ')'), '', $item_name);
+                // Split by '+' to extract the core item name
+                $parts = explode('+', $clean_display);
+                $core_name = trim($parts[0]);
+
+                $stmtFuzzy = $pdo->prepare("SELECT menu_item_id FROM menu_items WHERE item_name = ? OR ? LIKE CONCAT('%', item_name, '%') LIMIT 1");
+                $stmtFuzzy->execute([$core_name, $core_name]);
+                if ($row = $stmtFuzzy->fetch(PDO::FETCH_ASSOC)) {
+                    $item_id = (int)$row['menu_item_id'];
+                }
+            }
+
+            // 3. Absolute fallback to first item in database
             if ($item_id === 0) {
                 $fallback_stmt = $pdo->query("SELECT menu_item_id FROM menu_items LIMIT 1");
                 $fallback_row = $fallback_stmt->fetch(PDO::FETCH_ASSOC);

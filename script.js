@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
             price = "RM " + finalPrice.toFixed(2);
 
             // Add the item to our cart array
-            cart.push({ name: displayName, price });
+            cart.push({ name: displayName, price, base_name: name });
 
             // Save the updated cart to localStorage
             localStorage.setItem('myCart', JSON.stringify(cart));
